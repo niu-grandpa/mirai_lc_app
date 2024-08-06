@@ -1,0 +1,30 @@
+{
+  "name": "mirai_lc_app",
+  "private": true,
+  "version": "1.0.0",
+  "author": "Ryan John",
+  "license": "CC0-1.0",
+  "scripts": {
+    "dev": "rsbuild dev --open",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview"
+  },
+  "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
+    "@highlightjs/vue-plugin": "^2.1.0",
+    "ant-design-vue": "4.x",
+    "highlight.js": "^11.10.0",
+    "interactjs": "^1.10.27",
+    "nanoid": "^5.0.7",
+    "pinia": "^2.1.7",
+    "unplugin-auto-import": "^0.18.1",
+    "unplugin-vue-components": "^0.27.3",
+    "vue": "^3.4.19",
+    "vue-router": "4"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "1.0.1-beta.4",
+    "@rsbuild/plugin-vue": "1.0.1-beta.4",
+    "typescript": "^5.5.2"
+  }
+}
