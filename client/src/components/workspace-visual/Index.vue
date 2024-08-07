@@ -24,20 +24,14 @@
         <Visualizer :id="pane.key" :data="pane.anodes" />
         <template #overlay>
           <a-menu @click="onMenuClick" style="width: 120px">
-            <a-menu-item v-if="isShowOption" :key="ANODE_ACTION_KEY.CUT">
-              剪切
-            </a-menu-item>
-            <a-menu-item v-if="isShowOption" :key="ANODE_ACTION_KEY.COPY">
-              复制
-            </a-menu-item>
-            <a-menu-item
-              :disabled="!copyKey.length"
-              :key="ANODE_ACTION_KEY.PASTE">
-              粘贴
-            </a-menu-item>
-            <a-menu-item v-if="isShowOption" :key="ANODE_ACTION_KEY.DELETE">
-              删除
-            </a-menu-item>
+            <template v-for="item in menuItems" :key="item.key">
+              <a-menu-item
+                v-if="item.show"
+                :key="item.key"
+                :disabled="item.disabled">
+                {{ item.title }}
+              </a-menu-item>
+            </template>
           </a-menu>
         </template>
       </a-dropdown>
@@ -51,7 +45,7 @@ import { ANODE_ACTION_KEY } from '@/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { MenuProps } from 'ant-design-vue';
 import BlackLogo from 'public/logo-black.svg';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import Visualizer from './Visualizer.vue';
 
 const store = useWorkspaceStore();
@@ -60,6 +54,35 @@ const activeKey = ref(store.selectedKey[store.selectedKey.length - 1]);
 const isShowOption = ref(true);
 const tempCopyKey = ref('');
 const copyKey = ref('');
+
+const menuItems = computed(() => [
+  {
+    title: '剪切',
+    show: isShowOption.value,
+    key: ANODE_ACTION_KEY.CUT,
+  },
+  {
+    title: '复制',
+    show: isShowOption.value,
+    key: ANODE_ACTION_KEY.COPY,
+  },
+  {
+    title: '预览代码',
+    show: !isShowOption.value,
+    key: ANODE_ACTION_KEY.VIEW_CODE,
+  },
+  {
+    title: '粘贴',
+    show: !isShowOption.value,
+    disabled: !copyKey.value.length,
+    key: ANODE_ACTION_KEY.PASTE,
+  },
+  {
+    title: '删除',
+    show: isShowOption.value,
+    key: ANODE_ACTION_KEY.DELETE,
+  },
+]);
 
 watch(
   () => activeKey.value,
@@ -104,7 +127,7 @@ const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     copyKey.value = tempCopyKey.value;
   } else if (key === ANODE_ACTION_KEY.PASTE) {
     console.log(copyKey.value);
-  } else {
+  } else if (key === ANODE_ACTION_KEY.VIEW_CODE) {
     //
   }
 };
