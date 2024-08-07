@@ -7,6 +7,7 @@ export enum ANODE_ACTION_KEY {
   REFRESH = 'refresh',
   RENAME = 'rename',
   DELETE = 'delete',
+  VIEW_CODE = 'viewCode',
 }
 
 export const ANodeActionTitles = {
