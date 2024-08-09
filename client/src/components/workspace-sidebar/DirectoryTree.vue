@@ -101,8 +101,8 @@
 </template>
 
 <script setup lang="ts">
-import { ANODE_ACTION_KEY, ANodeActionTitles } from '@/enums';
 import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
+import { ANODE_ACTION_KEY, ANodeActionTitles } from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { type FileANode } from '@/types/abstractNode';
 import { PlusOutlined } from '@ant-design/icons-vue';
@@ -187,7 +187,6 @@ const onCtxMenuClick = (
     [ANODE_ACTION_KEY.COPY]: () => setCloneNodeKeys('copy', keys),
     [ANODE_ACTION_KEY.CUT]: () => setCloneNodeKeys('cut', keys),
     [ANODE_ACTION_KEY.PASTE]: pasteNode,
-    [ANODE_ACTION_KEY.REFRESH]: () => store.fetchTreeData([]),
     [ANODE_ACTION_KEY.RENAME]: () => (openRenameOrCreateModal.value = true),
     [ANODE_ACTION_KEY.DELETE]: () => confirmDeleteNode(keys),
   };
@@ -195,7 +194,7 @@ const onCtxMenuClick = (
   ctxMenuKey.value = menuKey;
   currentNodeKey.value = key;
   currentNodeName.value = name;
-
+  // @ts-ignore
   actions[menuKey]();
 };
 
