@@ -74,7 +74,6 @@ export default class TreeManager extends TreeManagerShare {
         : this.createElementANode(name);
 
     this.addOneNode(anchorKey, newNode);
-    return newNode;
   }
 
   /**
@@ -104,11 +103,13 @@ export default class TreeManager extends TreeManagerShare {
     } else {
       this.recursiveFindAndProcess(data, anchorKey, parentNode => {
         if (parentNode.isFolder) {
-          if (parentNode.isFile) {
-            parentNode.children.push(newNode);
-          } else if (parentNode.anodes) {
-            parentNode.anodes.push(newNode);
-          }
+          parentNode.children.push(newNode);
+          return true;
+        } else if (parentNode.isFile) {
+          parentNode.anodes.push(newNode);
+          return true;
+        } else if (!parentNode.isFolder && !parentNode.isFile) {
+          parentNode.children.push(newNode);
           return true;
         }
         return false;
