@@ -1,0 +1,8 @@
+**/node_modules
+dist/
+**/**/*.log
+**/**/*.txt
+example/
+public/*/**
+package-lock.json
+pnpm-lock.yaml
