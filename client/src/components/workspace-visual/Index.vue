@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import { FolderKeySuffix } from '@/core/tree-manager/share';
-import { ANODE_ACTION_KEY } from '@/enums';
+import { ANODE_ACTION_KEY } from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { MenuProps } from 'ant-design-vue';
 import BlackLogo from 'public/logo-black.svg';
