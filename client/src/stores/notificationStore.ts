@@ -1,6 +1,8 @@
 import { getLocalItem, setLocalItem } from '@/share';
+import { LOCAL_ITEM_KEY } from '@/share/enums';
 import { FolderANode } from '@/types/abstractNode';
 import { defineStore } from 'pinia';
+import mockData from './mock_data.json';
 
 interface NotificationStore {
   _list: {
@@ -30,13 +32,7 @@ export type NotificationType = 'normal' | 'download';
 export const useNotificationStore = defineStore('notification', {
   state: (): NotificationStore => ({
     _list: {
-      normal: [
-        {
-          title: '来自Google的新消息',
-          content: '这是一条新消息请仔细查阅我',
-          createdAt: Date.now(),
-        },
-      ],
+      normal: [],
       download: [],
     },
   }),
@@ -47,7 +43,9 @@ export const useNotificationStore = defineStore('notification', {
 
   actions: {
     initData() {
-      const list = getLocalItem<NotificationStore['_list']>('notification');
+      const list =
+        getLocalItem<NotificationStore['_list']>(LOCAL_ITEM_KEY.NOTIFICATION) ||
+        mockData.noticeList;
       if (list) {
         this._list = list;
       }
@@ -76,7 +74,7 @@ export const useNotificationStore = defineStore('notification', {
 
     addOne(key: NotificationType, value: any) {
       this._list[key].unshift(value);
-      setLocalItem('notification', this._list);
+      setLocalItem(LOCAL_ITEM_KEY.NOTIFICATION, this._list);
     },
 
     updateOne(key: NotificationType, value: any) {
@@ -85,7 +83,7 @@ export const useNotificationStore = defineStore('notification', {
           item = value;
         }
       });
-      setLocalItem('notification', this.list);
+      setLocalItem(LOCAL_ITEM_KEY.NOTIFICATION, this.list);
     },
 
     removeOne(key: NotificationType, createdAt: number) {
@@ -94,7 +92,7 @@ export const useNotificationStore = defineStore('notification', {
       );
       // @ts-ignore
       this._list[key] = newList;
-      setLocalItem('notification', newList);
+      setLocalItem(LOCAL_ITEM_KEY.NOTIFICATION, newList);
     },
   },
 });

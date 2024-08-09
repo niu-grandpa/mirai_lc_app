@@ -1,6 +1,7 @@
 import { type CreateANodeOptions } from '@/core/tree-manager/handler';
 import { useTreeManager } from '@/hooks';
 import { getLocalItem, setLocalItem } from '@/share';
+import { LOCAL_ITEM_KEY } from '@/share/enums';
 import {
   type ElementANode,
   type FileANode,
@@ -8,6 +9,7 @@ import {
   type TreeDataCommonType,
 } from '@/types/abstractNode';
 import { defineStore } from 'pinia';
+import mockTreeData from './mock_data.json';
 
 export interface WorkspaceState {
   _selectedKey: string[];
@@ -37,19 +39,28 @@ export const useWorkspaceStore = defineStore('workspace', {
   },
 
   actions: {
-    async fetchTreeData(value: FolderANode[]) {
-      // TODO 调用api接口
-      this._treeData = treeManager.setData(value).sortNodes();
+    getLocalData() {
+      const data =
+        getLocalItem<TreeDataCommonType[]>(LOCAL_ITEM_KEY.FILE_DATA) ||
+        mockTreeData.treeData;
+      this._treeData = treeManager.setData(data).sortNodes();
       treeManager.freed();
     },
 
+    updateData(value: FolderANode[]) {
+      const newData = treeManager.setData(value).sortNodes();
+      treeManager.freed();
+      this._treeData = newData;
+      setLocalItem(LOCAL_ITEM_KEY.FILE_DATA, newData);
+    },
+
     initOpenedKeys() {
-      this._openedKeys = new Set(getLocalItem('openedKeys'));
+      this._openedKeys = new Set(getLocalItem(LOCAL_ITEM_KEY.OPENED_KEYS));
       this.setOpenedKeys();
     },
 
     setOpenedKeys() {
-      setLocalItem('openedKeys', [...this.openedKeys]);
+      setLocalItem(LOCAL_ITEM_KEY.OPENED_KEYS, [...this.openedKeys]);
     },
 
     getOpenedFileANodes(): Set<FileANode> {
@@ -79,16 +90,16 @@ export const useWorkspaceStore = defineStore('workspace', {
     updateSelectedKey(value?: string[]) {
       const keys =
         value ||
-        getLocalItem<string[]>('selectedKey') ||
+        getLocalItem<string[]>(LOCAL_ITEM_KEY.SELECTED_KEYS) ||
         [...this._openedKeys][0] ||
         [];
       this._selectedKey = keys;
-      setLocalItem('selectedKey', keys);
+      setLocalItem(LOCAL_ITEM_KEY.SELECTED_KEYS, keys);
     },
 
     updateExpandedKeys(value: string[]) {
-      this._expandedKeys = value || getLocalItem('expandedKeys');
-      setLocalItem('expandedKeys', this._expandedKeys);
+      this._expandedKeys = value || getLocalItem(LOCAL_ITEM_KEY.EXPANED_KEYS);
+      setLocalItem(LOCAL_ITEM_KEY.EXPANED_KEYS, this._expandedKeys);
     },
 
     findOneNode(key: string) {
@@ -100,51 +111,43 @@ export const useWorkspaceStore = defineStore('workspace', {
       return treeManager.setData(this.treeData).findKeysByName(name);
     },
 
-    async updateTreeData(value: FolderANode[]) {
-      const newData = treeManager.setData(value).sortNodes();
-      treeManager.freed();
-      // TODO 调用api接口
-      this._treeData = newData;
+    createAndInsertNode(opts: CreateANodeOptions) {
+      treeManager.setData(this.treeData).createAndInsertNode(opts);
+      this.updateData(this.treeData);
     },
 
-    async createAndInsertNode(opts: CreateANodeOptions) {
-      const newNode = treeManager
-        .setData(this.treeData)
-        .createAndInsertNode(opts);
-      // TODO 调用api接口
-    },
-
-    async updateOneNode(key: string, value: Partial<TreeDataCommonType>) {
-      // TODO 调用api接口
+    updateOneNode(key: string, value: Partial<TreeDataCommonType>) {
       treeManager.setData(this.treeData).updateOneNode(key, value);
+      this.updateData(this.treeData);
     },
 
-    async addOneNode(key: string, node: TreeDataCommonType) {
-      // TODO 调用api接口
+    addOneNode(key: string, node: TreeDataCommonType) {
       treeManager.setData(this.treeData).addOneNode(key, node);
+      this.updateData(this.treeData);
     },
 
-    async removeNode(keys: string[]) {
-      // TODO 调用api接口
+    removeNode(keys: string[]) {
       const data = treeManager.setData(this.treeData);
       const newKeys = this.selectedKey.filter(k => !keys.includes(k));
       keys.forEach(k => data.removeOneNode(k));
-      data.freed();
       this.updateSelectedKey(newKeys);
+      this.updateData(this.treeData);
+      data.freed();
     },
 
-    async pasteNode(targetKey: string, keys: string[]) {
+    pasteNode(targetKey: string, keys: string[]) {
       const newData = treeManager
         .setData(this.treeData)
         .pasteNode(targetKey, keys)
         .getData();
-      // TODO 调用api接口
+      this.updateData(newData);
       treeManager.freed();
     },
 
-    async dragNode<T>(info: T) {
+    dragNode<T>(info: T) {
       const newData = treeManager.setData(this.treeData).dragNode(info);
-      this.updateTreeData(newData);
+      this.updateData(newData);
+      this.updateData(newData);
       treeManager.freed();
     },
   },
