@@ -97,9 +97,10 @@ export const useWorkspaceStore = defineStore('workspace', {
       setLocalItem(LOCAL_ITEM_KEY.SELECTED_KEYS, keys);
     },
 
-    updateExpandedKeys(value: string[]) {
-      this._expandedKeys = value || getLocalItem(LOCAL_ITEM_KEY.EXPANED_KEYS);
-      setLocalItem(LOCAL_ITEM_KEY.EXPANED_KEYS, this._expandedKeys);
+    updateExpandedKeys(value?: string[]) {
+      const _value = value || getLocalItem(LOCAL_ITEM_KEY.EXPANED_KEYS) || [];
+      this._expandedKeys = _value;
+      setLocalItem(LOCAL_ITEM_KEY.EXPANED_KEYS, _value);
     },
 
     findOneNode(key: string) {

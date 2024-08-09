@@ -19,7 +19,7 @@ const notificationStore = useNotificationStore();
 onBeforeMount(() => {
   workspaceStore.getLocalData();
   workspaceStore.updateSelectedKey();
-  workspaceStore.updateExpandedKeys([]);
+  workspaceStore.updateExpandedKeys();
   workspaceStore.initOpenedKeys();
   workspaceStore.updateOpenedFileANodes('add', [...workspaceStore.openedKeys]);
 

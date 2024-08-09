@@ -26,9 +26,9 @@
       :tree-data="store.treeData"
       :field-names="{ title: 'name' }"
       @expand="autoExpandParent = false"
+      v-model:expandedKeys="expandedKeys"
       :auto-expand-parent="autoExpandParent"
       v-model:selectedKeys="store._selectedKey"
-      v-model:expandedKeys="store._expandedKeys"
       :style="{ height: `${maxHeight}px`, overflow: 'auto' }">
       <template #title="{ name, key: treeKey }">
         <a-dropdown :trigger="['contextmenu']">
@@ -101,13 +101,22 @@
 </template>
 
 <script setup lang="ts">
+import { FolderKeySuffix } from '@/core/tree-manager/share';
 import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
 import { ANODE_ACTION_KEY, ANodeActionTitles } from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { type FileANode } from '@/types/abstractNode';
 import { PlusOutlined } from '@ant-design/icons-vue';
 import { Checkbox, message, Modal } from 'ant-design-vue';
-import { h, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import {
+  h,
+  onBeforeMount,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue';
 
 const modalTitle = {
   [ANODE_ACTION_KEY.CREATE_FOLDER]: '新建文件夹',
@@ -126,6 +135,7 @@ const showPaste = ref(true);
 const showDelPrompt = ref(false);
 const openCodeModal = ref(false);
 const autoExpandParent = ref(false);
+const expandedKeys = ref<string[]>([]);
 const ctxMenuKey = ref<ANODE_ACTION_KEY>();
 const openRenameOrCreateModal = ref(false);
 const maxHeight = ref(getWinHeight() - 58);
@@ -134,16 +144,27 @@ const cloneNodeKeys = reactive<{ keys: string[]; type: 'copy' | 'cut' }>({
   type: 'copy',
 });
 
+const setTreeMaxHeight = () => (maxHeight.value = getWinHeight() - 58);
+
 onMounted(() => {
-  showDelPrompt.value = getLocalItem('showDelPrompt');
   window.addEventListener('resize', setTreeMaxHeight);
 });
-
 onBeforeUnmount(() => {
   window.removeEventListener('resize', setTreeMaxHeight);
 });
 
-const setTreeMaxHeight = () => (maxHeight.value = getWinHeight() - 58);
+onBeforeMount(() => {
+  showDelPrompt.value = getLocalItem('showDelPrompt');
+  expandedKeys.value = store.expandedKeys;
+});
+
+watch(
+  () => expandedKeys.value,
+  newVal => {
+    const val = newVal.filter(item => item.endsWith(FolderKeySuffix));
+    store.updateExpandedKeys(val);
+  }
+);
 
 const onSearch = (value: string) => {
   const expanded = store.findKeysByName(value);
