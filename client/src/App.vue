@@ -12,13 +12,12 @@ import { useNotificationStore } from '@/stores/notificationStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { theme } from 'ant-design-vue';
 import { onBeforeMount } from 'vue';
-import { treeData } from './views/mockData';
 
 const workspaceStore = useWorkspaceStore();
 const notificationStore = useNotificationStore();
 
 onBeforeMount(() => {
-  workspaceStore.fetchTreeData(treeData);
+  workspaceStore.getLocalData();
   workspaceStore.updateSelectedKey();
   workspaceStore.updateExpandedKeys([]);
   workspaceStore.initOpenedKeys();
