@@ -1,12 +1,29 @@
 <template>
-  <a-alert v-if="visible" closable :message="data.title" :after-close="onClose">
+  <a-alert v-if="visible" show-icon closable :after-close="onClose">
+    <template #message>
+      <a-typography-text
+        :style="{ width: '180px', fontSize: '16px' }"
+        :ellipsis="{ tooltip: data.title }"
+        :content="data.title" />
+    </template>
     <template #description>
       <div v-if="props.type === 'download'" style="text-align: right">
         <a-progress :percent="percent" size="small" :status="status" />
         <a :href="data.url" v-if="percent === 100">下载</a>
         <span v-else style="color: #00000040">已过期</span>
       </div>
-      <div v-else>{{ data.content }}</div>
+      <div v-else>
+        <a-typography-paragraph
+          :ellipsis="{
+            rows: 2,
+            symbol: '展开',
+            expandable: true,
+          }"
+          :content="data.content" />
+        <div style="text-align: right">
+          — — {{ new Date(data.createdAt).toLocaleDateString() }}
+        </div>
+      </div>
     </template>
   </a-alert>
 </template>
