@@ -89,15 +89,6 @@
     v-model:open="openRenameOrCreateModal">
     <a-input v-model:value="currentNodeName" placeholder="起个名字吧..." />
   </a-modal>
-
-  <a-modal
-    :width="1200"
-    :footer="null"
-    @ok="openCodeModal = false"
-    v-model:open="openCodeModal"
-    :title="`【${currentNodeName}】节点数据源`">
-    <highlightjs autodetect :code="originCode" />
-  </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -126,14 +117,12 @@ const modalTitle = {
 
 const store = useWorkspaceStore();
 
-const originCode = ref('');
 const searchValue = ref('');
 const currentNodeKey = ref('');
 const currentNodeName = ref('');
 const showCreate = ref(true);
 const showPaste = ref(true);
 const showDelPrompt = ref(false);
-const openCodeModal = ref(false);
 const autoExpandParent = ref(false);
 const expandedKeys = ref<string[]>([]);
 const ctxMenuKey = ref<ANODE_ACTION_KEY>();
