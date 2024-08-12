@@ -1,29 +1,44 @@
 import {
   BellOutlined,
+  BgColorsOutlined,
   ExportOutlined,
   LaptopOutlined,
   SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue';
+import { type LaptopOutlinedIconType } from '@ant-design/icons-vue/lib/icons/LaptopOutlined';
+import CompPanel from './CompPanel/Index.vue';
 import DirectoryTree from './DirectoryTree.vue';
 import Export from './Export.vue';
 import NotificationList from './NotificationList/Index.vue';
+import StyleAdjust from './StyleAdjust/Index.vue';
 
 export enum RIGHT_OPTIONS {
-  RESOURCE = 'resource',
-  NOTICE = 'notice',
-  EXPORT = 'export',
-  USER = 'user',
-  SETTING = 'setting',
+  RESOURCE = 'RESOURCE',
+  COMPONENT = 'COMPONENT',
+  STYLE = 'STYLE',
+  EXPORT = 'EXPORT',
+  NOTICE = 'NOTICE',
+  USER = 'USER',
+  SETTING = 'SETTING',
 }
 
 export const COMPONENT_MAP = {
   [RIGHT_OPTIONS.RESOURCE]: DirectoryTree,
-  [RIGHT_OPTIONS.NOTICE]: NotificationList,
+  [RIGHT_OPTIONS.COMPONENT]: CompPanel,
+  [RIGHT_OPTIONS.STYLE]: StyleAdjust,
   [RIGHT_OPTIONS.EXPORT]: Export,
+  [RIGHT_OPTIONS.NOTICE]: NotificationList,
 };
 
-export const PANEL_OPTIONS = [
+interface PanelOptions {
+  title: string;
+  icon: LaptopOutlinedIconType;
+  key: RIGHT_OPTIONS;
+  active: boolean;
+}
+
+export const PANEL_OPTIONS: PanelOptions[] = [
   {
     title: '资源管理器',
     icon: LaptopOutlined,
@@ -31,15 +46,27 @@ export const PANEL_OPTIONS = [
     active: true,
   },
   {
-    title: '消息通知',
-    icon: BellOutlined,
-    key: RIGHT_OPTIONS.NOTICE,
+    title: '组件面板',
+    icon: BgColorsOutlined,
+    key: RIGHT_OPTIONS.COMPONENT,
+    active: false,
+  },
+  {
+    title: '样式调节',
+    icon: BgColorsOutlined,
+    key: RIGHT_OPTIONS.STYLE,
     active: false,
   },
   {
     title: '导出',
     icon: ExportOutlined,
     key: RIGHT_OPTIONS.EXPORT,
+    active: false,
+  },
+  {
+    title: '消息通知',
+    icon: BellOutlined,
+    key: RIGHT_OPTIONS.NOTICE,
     active: false,
   },
   { title: '帐户', icon: UserOutlined, key: RIGHT_OPTIONS.USER, active: false },
