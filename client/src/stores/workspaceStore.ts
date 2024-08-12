@@ -148,7 +148,6 @@ export const useWorkspaceStore = defineStore('workspace', {
     dragNode<T>(info: T) {
       const newData = treeManager.setData(this.treeData).dragNode(info);
       this.updateData(newData);
-      this.updateData(newData);
       treeManager.freed();
     },
   },
