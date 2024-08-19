@@ -94,9 +94,9 @@
 <script setup lang="ts">
 import { FolderKeySuffix } from '@/core/tree-manager/share';
 import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
+import { type FileANode } from '@/share/abstractNode';
 import { ANODE_ACTION_KEY, ANodeActionTitles } from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { type FileANode } from '@/types/abstractNode';
 import { PlusOutlined } from '@ant-design/icons-vue';
 import { Checkbox, message, Modal } from 'ant-design-vue';
 import {

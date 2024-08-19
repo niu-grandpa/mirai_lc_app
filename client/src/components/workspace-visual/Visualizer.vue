@@ -14,8 +14,8 @@
 <script setup lang="ts">
 import { useDrag } from '@/hooks';
 import { DRAG_RANGE } from '@/hooks/useDrag';
+import { type ElementANode } from '@/share/abstractNode';
 import { useCommonStore } from '@/stores/commonStore';
-import { type ElementANode } from '@/types/abstractNode';
 import { message } from 'ant-design-vue';
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import AuxLines from './AuxLines.vue';

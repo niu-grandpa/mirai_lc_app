@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { type ElementANode } from '@/types/abstractNode';
+import { type ElementANode } from '@/share/abstractNode';
 
 const { node } = defineProps<{ node: ElementANode }>();
 </script>
