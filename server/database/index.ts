@@ -14,33 +14,38 @@ const pool = mysql.createPool({
   database: DataBase.name,
 });
 
-export const queryDB = (query: string, params?: any) => {
-  return new Promise((resolve, reject) => {
+export const queryDB = <T = unknown>(query: string, params?: any) => {
+  return new Promise<T[]>((resolve, reject) => {
     pool.query(query, params, (err, results) => {
       if (err) {
         return reject(err);
       }
-      resolve(results);
+      resolve(results as T[]);
     });
   });
 };
 
-pool.getConnection((err, connection) => {
+const getConnection = (err: any, connection: any) => {
   if (err) {
     logger.err('数据库连接失败: ' + err.message);
   } else {
     logger.info('数据库连接成功');
     // 执行表创建
-    createTable().then(() => {
-      logger.info('所有的表均已创建!');
-      connection.release(); // 释放连接
-      pool.end(err => {
-        if (err) {
-          logger.err('关闭数据库连接池失败: ' + err.message);
-        } else {
-          logger.info('数据库连接池关闭');
-        }
+    createTable()
+      .then(() => {
+        logger.info('表创建成功!');
+      })
+      .finally(() => {
+        connection.release(); // 释放连接
+        pool.end(err => {
+          if (err) {
+            logger.err('关闭数据库连接池失败: ' + err.message);
+          } else {
+            logger.info('数据库连接池关闭');
+          }
+        });
       });
-    });
   }
-});
+};
+
+pool.getConnection(getConnection);
