@@ -14,3 +14,5 @@ dist/
 
 # Dts
 types
+
+src/stores/mock_data.json
