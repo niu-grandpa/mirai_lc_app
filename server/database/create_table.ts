@@ -7,8 +7,15 @@ export default function createTable() {
     path.join(__dirname, './sql/create_user_table.sql'),
     'utf-8'
   );
+  const createDownloadTableQuery = readFileSync(
+    path.join(__dirname, './sql/create_download_table.sql'),
+    'utf-8'
+  );
 
-  const promises = [queryDB(createUsersTableQuery)];
+  const promises = [
+    queryDB(createUsersTableQuery),
+    queryDB(createDownloadTableQuery),
+  ];
 
   return new Promise((res, rej) => {
     const arr = Promise.race(promises);
