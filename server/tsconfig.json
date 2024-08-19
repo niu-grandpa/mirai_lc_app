@@ -70,6 +70,12 @@
     },
     "useUnknownInCatchVariables": false
   },
-  "include": ["database/**/*.ts", "src/**/*.ts", "spec/**/*.ts", "build.ts"],
+  "include": [
+    "database/**/*.ts",
+    "src/**/*.ts",
+    "spec/**/*.ts",
+    "build.ts",
+    "__test__/**/*.ts"
+  ],
   "exclude": ["src/public/"]
 }
