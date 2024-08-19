@@ -8,9 +8,12 @@ interface ShareType {
 
 interface ObjectMap extends Record<string, string | symbol | number | any> {}
 
+export type TreeDataCommonType = FolderANode | FileANode | ElementANode;
+
 export interface FolderANode extends ShareType {
   children: (FolderANode | FileANode)[];
   isFolder: boolean;
+  timestamp: number;
 }
 
 export interface FileANode extends ShareType {
