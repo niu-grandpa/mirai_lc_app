@@ -1,5 +1,5 @@
-import { RegisterUser, UserModel } from '@src/models/user';
-import { IReq, IRes, RouteError } from '@src/types/types';
+import { RegisterUser, UserModel } from '@/models/user';
+import { IReq, IRes, RouteError } from '@/types/types';
 import HttpStatusCodes from 'constants/http_status_codes';
 
 class UserController {
@@ -26,6 +26,10 @@ class UserController {
         '用户注册失败'
       );
     }
+  }
+
+  genFileKey(prefix = '', suffix = ''): string {
+    // TODO nanoid
   }
 }
 
