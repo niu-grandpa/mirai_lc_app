@@ -7,7 +7,9 @@ module.exports = {
   coverageDirectory: 'coverage',
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.ts$',
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1'
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^database': '<rootDir>/database/$1',
+    '^constants/(.*)$': '<rootDir>/constants/$1',
   },
   // globals: {
   //   'ts-jest': {
@@ -15,6 +17,6 @@ module.exports = {
   //   }
   // },
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.json' }]
-  }
-}
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
+  },
+};
