@@ -59,7 +59,7 @@ if (EnvVars.NodeEnv === NODE_ENVS.PROD.valueOf()) {
 }
 
 // Add APIs, must be after middleware
-app.use('/api', routes);
+app.use('/api/v1', routes);
 
 // Add error handler
 app.use((err: Error, _: Request, res: Response, next: NextFunction) => {
