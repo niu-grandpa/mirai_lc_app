@@ -3,14 +3,16 @@ import { deepClone } from '@/share';
 import {
   type FolderANode,
   type TreeDataCommonType,
-} from '@/types/abstractNode';
+} from '@/share/abstractNode';
+import { ANODE_ACTION_KEY } from '@/share/enums';
 import { type AntTreeNodeDropEvent } from 'ant-design-vue/es/tree';
 import { TreeManagerShare } from './share';
 
 export interface CreateANodeOptions {
   name: string;
+  isRoot: boolean;
   anchorKey: string | undefined;
-  type: 'folder' | 'file' | 'elNode';
+  type: ANODE_ACTION_KEY;
 }
 
 export default class TreeManager extends TreeManagerShare {
@@ -65,11 +67,18 @@ export default class TreeManager extends TreeManagerShare {
     return node;
   }
 
-  createAndInsertNode({ type, name, anchorKey }: CreateANodeOptions) {
+  createAndInsertNode({ type, name, isRoot, anchorKey }: CreateANodeOptions) {
+    if (isRoot && name === 'src') {
+      throw Error('请使用其他文件名');
+    }
+    if (this.getData().some(item => item.name === name)) {
+      throw Error('文件名已存在');
+    }
     const newNode: TreeDataCommonType =
-      type === 'folder'
-        ? this.createFolderANode(name)
-        : type === 'file'
+      type === ANODE_ACTION_KEY.CREATE_FOLDER ||
+      type === ANODE_ACTION_KEY.CREATE_PROJECT
+        ? this.createFolderANode(name, isRoot)
+        : type === ANODE_ACTION_KEY.CREATE_FILE
         ? this.createFileANode(name)
         : this.createElementANode(name);
 
@@ -83,6 +92,9 @@ export default class TreeManager extends TreeManagerShare {
    */
   updateOneNode(key: string, value: Partial<TreeDataCommonType>) {
     this.recursiveFindAndProcess(this.getData(), key, node => {
+      if (node.name === 'src') {
+        throw Error('不允许修改基本目录的名称');
+      }
       Object.assign(node, value);
       return true;
     });
@@ -102,7 +114,17 @@ export default class TreeManager extends TreeManagerShare {
       data.push(newNode);
     } else {
       this.recursiveFindAndProcess(data, anchorKey, parentNode => {
+        if (parentNode.children.some(item => item.name === newNode.name)) {
+          throw Error('文件名已存在');
+        }
         if (parentNode.isFolder) {
+          if (
+            !newNode.isFolder &&
+            newNode.name.toLowerCase() === 'app' &&
+            parentNode.name === 'src'
+          ) {
+            throw Error('不允许在src目录下使用系统预留文件');
+          }
           parentNode.children.push(newNode);
           return true;
         } else if (parentNode.isFile) {
@@ -126,6 +148,9 @@ export default class TreeManager extends TreeManagerShare {
    */
   removeOneNode(key: string) {
     this.recursiveFindAndProcess(this.getData(), key, (node, parentNodes) => {
+      if (node.name === 'src') {
+        throw Error('不允许删除基本目录');
+      }
       const index = parentNodes.indexOf(node);
       if (index !== -1) {
         parentNodes.splice(index, 1);

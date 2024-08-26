@@ -63,8 +63,8 @@
       <a-menu
         style="width: 120px"
         @click="(item:any) => onCtxMenuClick('', item.key, '')">
-        <a-menu-item :key="ANODE_ACTION_KEY.CREATE_FOLDER">
-          {{ ANodeActionTitles[ANODE_ACTION_KEY.CREATE_FOLDER] }}
+        <a-menu-item :key="ANODE_ACTION_KEY.CREATE_PROJECT">
+          创建项目...
         </a-menu-item>
         <a-menu-item :key="ANODE_ACTION_KEY.CREATE_FILE">
           {{ ANodeActionTitles[ANODE_ACTION_KEY.CREATE_FILE] }}
@@ -80,7 +80,7 @@
     cancelText="取消"
     :closable="false"
     :title="
-      modalTitle[
+      ANodeActionTitles[
         // @ts-ignore
         ctxMenuKey
       ]
@@ -94,7 +94,7 @@
 <script setup lang="ts">
 import { FolderKeySuffix } from '@/core/tree-manager/share';
 import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
-import { type FileANode } from '@/share/abstractNode';
+import { FolderANode, type FileANode } from '@/share/abstractNode';
 import { ANODE_ACTION_KEY, ANodeActionTitles } from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { PlusOutlined } from '@ant-design/icons-vue';
@@ -108,12 +108,6 @@ import {
   ref,
   watch,
 } from 'vue';
-
-const modalTitle = {
-  [ANODE_ACTION_KEY.CREATE_FOLDER]: '新建文件夹',
-  [ANODE_ACTION_KEY.CREATE_FILE]: '新建文件',
-  [ANODE_ACTION_KEY.RENAME]: '重命名',
-};
 
 const store = useWorkspaceStore();
 
@@ -150,7 +144,7 @@ onBeforeMount(() => {
 watch(
   () => expandedKeys.value,
   newVal => {
-    const val = newVal.filter(item => item.endsWith(FolderKeySuffix));
+    const val = newVal.filter(item => item?.endsWith(FolderKeySuffix));
     store.updateExpandedKeys(val);
   }
 );
@@ -175,14 +169,21 @@ const isCtxOptHidden = (k: ANODE_ACTION_KEY) => {
 };
 
 const onFirstCreate = () => {
-  ctxMenuKey.value = ANODE_ACTION_KEY.CREATE_FOLDER;
+  ctxMenuKey.value = ANODE_ACTION_KEY.CREATE_PROJECT;
   openCreateModal();
 };
 
-const onRightClick = ({ event, node }: { event: any; node: FileANode }) => {
+const onRightClick = ({
+  event,
+  node,
+}: {
+  event: any;
+  node: FolderANode & FileANode;
+}) => {
   event.stopPropagation();
-  showCreate.value = !node.isLeaf;
-  showPaste.value = !node.isLeaf;
+  const hidden = !node.isRoot && !node.isLeaf;
+  showCreate.value = hidden;
+  showPaste.value = hidden;
 };
 
 const onCtxMenuClick = (
@@ -192,13 +193,14 @@ const onCtxMenuClick = (
 ) => {
   const keys = store.selectedKey.includes(key) ? store.selectedKey : [key];
   const actions = {
+    [ANODE_ACTION_KEY.CREATE_PROJECT]: openCreateModal,
     [ANODE_ACTION_KEY.CREATE_FOLDER]: openCreateModal,
     [ANODE_ACTION_KEY.CREATE_FILE]: openCreateModal,
     [ANODE_ACTION_KEY.COPY]: () => setCloneNodeKeys('copy', keys),
     [ANODE_ACTION_KEY.CUT]: () => setCloneNodeKeys('cut', keys),
     [ANODE_ACTION_KEY.PASTE]: pasteNode,
     [ANODE_ACTION_KEY.RENAME]: () => (openRenameOrCreateModal.value = true),
-    [ANODE_ACTION_KEY.DELETE]: () => confirmDeleteNode(keys),
+    [ANODE_ACTION_KEY.DELETE]: () => onDeleteNode(keys),
   };
 
   ctxMenuKey.value = menuKey;
@@ -213,29 +215,40 @@ const openCreateModal = () => {
   openRenameOrCreateModal.value = true;
 };
 
-const onRenameOrCreateNode = async () => {
+const onRenameOrCreateNode = () => {
   const menuKey = ctxMenuKey.value!;
   const name = currentNodeName.value;
 
   if (!name) {
-    message.error('起个名字');
+    message.error('请输入内容');
     return;
   }
-  if (
-    [ANODE_ACTION_KEY.CREATE_FOLDER, ANODE_ACTION_KEY.CREATE_FILE].includes(
-      menuKey
-    )
-  ) {
-    store.createAndInsertNode({
-      name,
-      // @ts-ignore
-      type: menuKey,
-      anchorKey: currentNodeKey.value,
-    });
-    message.success('新建成功');
+
+  const isCreate: boolean = [
+    ANODE_ACTION_KEY.CREATE_PROJECT,
+    ANODE_ACTION_KEY.CREATE_FOLDER,
+    ANODE_ACTION_KEY.CREATE_FILE,
+  ].includes(menuKey);
+  if (isCreate) {
+    try {
+      store.createAndInsertNode({
+        name,
+        // @ts-ignore
+        type: menuKey,
+        anchorKey: currentNodeKey.value,
+        isRoot: menuKey === ANODE_ACTION_KEY.CREATE_PROJECT,
+      });
+      message.success('新建成功');
+    } catch (error: Error) {
+      message.error(error.message);
+    }
   } else {
-    store.updateOneNode(currentNodeKey.value, { name });
-    message.success('重命名成功');
+    try {
+      store.updateOneNode(currentNodeKey.value, { name });
+      message.success('重命名成功');
+    } catch (error: Error) {
+      message.error(error.message);
+    }
   }
 
   resetModal();
@@ -262,11 +275,20 @@ const pasteNode = async () => {
   message.success('粘贴成功');
 };
 
-const confirmDeleteNode = async (keys: string[]) => {
+const onDeleteNode = async (keys: string[]) => {
+  const fn = () => {
+    try {
+      store.removeNode(keys);
+    } catch (error: Error) {
+      message.error(error.message);
+    }
+  };
+
   if (showDelPrompt.value) {
-    store.removeNode(keys);
+    fn();
     return;
   }
+
   Modal.confirm({
     title: '确认要删除吗？',
     okText: '确定',
@@ -290,9 +312,7 @@ const confirmDeleteNode = async (keys: string[]) => {
         )
       ),
     ]),
-    onOk() {
-      store.removeNode(keys);
-    },
+    onOk: fn,
   });
 };
 </script>
