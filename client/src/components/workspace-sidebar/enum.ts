@@ -1,5 +1,4 @@
 import {
-  BellOutlined,
   BgColorsOutlined,
   ExportOutlined,
   LaptopOutlined,
@@ -10,7 +9,6 @@ import { type LaptopOutlinedIconType } from '@ant-design/icons-vue/lib/icons/Lap
 import CompPanel from './CompPanel/Index.vue';
 import DirectoryTree from './DirectoryTree.vue';
 import Export from './Export.vue';
-import NotificationList from './NotificationList/Index.vue';
 import StyleAdjust from './StyleAdjust/Index.vue';
 
 export enum RIGHT_OPTIONS {
@@ -18,7 +16,6 @@ export enum RIGHT_OPTIONS {
   COMPONENT = 'COMPONENT',
   STYLE = 'STYLE',
   EXPORT = 'EXPORT',
-  NOTICE = 'NOTICE',
   USER = 'USER',
   SETTING = 'SETTING',
 }
@@ -28,7 +25,6 @@ export const COMPONENT_MAP = {
   [RIGHT_OPTIONS.COMPONENT]: CompPanel,
   [RIGHT_OPTIONS.STYLE]: StyleAdjust,
   [RIGHT_OPTIONS.EXPORT]: Export,
-  [RIGHT_OPTIONS.NOTICE]: NotificationList,
 };
 
 interface PanelOptions {
@@ -61,12 +57,6 @@ export const PANEL_OPTIONS: PanelOptions[] = [
     title: '导出',
     icon: ExportOutlined,
     key: RIGHT_OPTIONS.EXPORT,
-    active: false,
-  },
-  {
-    title: '消息通知',
-    icon: BellOutlined,
-    key: RIGHT_OPTIONS.NOTICE,
     active: false,
   },
   { title: '帐户', icon: UserOutlined, key: RIGHT_OPTIONS.USER, active: false },
