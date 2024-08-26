@@ -14,10 +14,12 @@ export class TreeManagerShare {
     return `${prefix}${nanoid(8)}${suffix}`;
   }
 
-  protected createFolderANode(name: string): FolderANode {
+  protected createFolderANode(name: string, isRoot = false): FolderANode {
+    const children = !isRoot ? [] : [this.createFolderANode('src', false)];
     return {
       name,
-      children: [],
+      isRoot,
+      children,
       isLeaf: false,
       isFolder: true,
       timestamp: Date.now(),
