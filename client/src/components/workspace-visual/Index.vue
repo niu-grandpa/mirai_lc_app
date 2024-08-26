@@ -95,7 +95,7 @@ watch(
   () => store.selectedKey,
   newVal => {
     const lastKey = newVal[newVal.length - 1];
-    if (!lastKey.endsWith(FolderKeySuffix)) {
+    if (!lastKey?.endsWith(FolderKeySuffix)) {
       activeKey.value = lastKey;
       store.updateSelectedKey(newVal);
       store.updateOpenedFileANodes('add', lastKey);
