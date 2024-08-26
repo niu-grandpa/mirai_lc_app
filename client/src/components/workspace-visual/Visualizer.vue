@@ -51,7 +51,7 @@ const createGrids = (w = 0, h = 0) => {
 
   canvasEl.width = canvasW;
   canvasEl.height = canvasH;
-  ctx.setLineDash([2, 2]);
+  ctx.setLineDash([1, 1]);
 
   for (let i = 0; i < ~~(canvasW / DRAG_RANGE); i++) {
     ctx.beginPath();
