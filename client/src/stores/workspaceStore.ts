@@ -1,13 +1,13 @@
 import { type CreateANodeOptions } from '@/core/tree-manager/handler';
 import { useTreeManager } from '@/hooks';
 import { getLocalItem, setLocalItem } from '@/share';
-import { LOCAL_ITEM_KEY } from '@/share/enums';
 import {
   type ElementANode,
   type FileANode,
   type FolderANode,
   type TreeDataCommonType,
-} from '@/types/abstractNode';
+} from '@/share/abstractNode';
+import { LOCAL_ITEM_KEY } from '@/share/enums';
 import { defineStore } from 'pinia';
 import mockTreeData from './mock_data.json';
 
