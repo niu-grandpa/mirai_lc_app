@@ -67,7 +67,12 @@ export default class TreeManager extends TreeManagerShare {
     return node;
   }
 
-  createAndInsertNode({ type, name, isRoot, anchorKey }: CreateANodeOptions) {
+  async createAndInsertNode({
+    type,
+    name,
+    isRoot,
+    anchorKey,
+  }: CreateANodeOptions) {
     if (isRoot && name === 'src') {
       throw Error('请使用其他文件名');
     }
@@ -77,10 +82,10 @@ export default class TreeManager extends TreeManagerShare {
     const newNode: TreeDataCommonType =
       type === ANODE_ACTION_KEY.CREATE_FOLDER ||
       type === ANODE_ACTION_KEY.CREATE_PROJECT
-        ? this.createFolderANode(name, isRoot)
+        ? await this.createFolderANode(name, isRoot)
         : type === ANODE_ACTION_KEY.CREATE_FILE
-        ? this.createFileANode(name)
-        : this.createElementANode(name);
+        ? await this.createFileANode(name)
+        : await this.createElementANode(name);
 
     this.addOneNode(anchorKey, newNode);
   }
