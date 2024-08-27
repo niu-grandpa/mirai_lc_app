@@ -7,3 +7,13 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>;
   export default component;
 }
+
+interface ImportMetaEnv {
+  readonly PUBLIC_ENV: string;
+  readonly PUBLIC_PROXY: string;
+  readonly PUBLIC_API_PREFIX: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
