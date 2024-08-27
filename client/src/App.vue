@@ -3,18 +3,24 @@
     :theme="{
       algorithm: theme.darkAlgorithm,
     }">
-    <router-view />
+    <a-spin
+      :delay="200"
+      tip="Loading..."
+      size="large"
+      :spinning="commonStore.loading">
+      <router-view />
+    </a-spin>
   </a-config-provider>
 </template>
 
 <script setup lang="ts">
-import { useNotificationStore } from '@/stores/notificationStore';
+import { useCommonStore } from '@/stores/commonStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { theme } from 'ant-design-vue';
 import { onBeforeMount } from 'vue';
 
+const commonStore = useCommonStore();
 const workspaceStore = useWorkspaceStore();
-const notificationStore = useNotificationStore();
 
 onBeforeMount(() => {
   workspaceStore.getLocalData();
@@ -22,8 +28,6 @@ onBeforeMount(() => {
   workspaceStore.updateExpandedKeys();
   workspaceStore.initOpenedKeys();
   workspaceStore.updateOpenedFileANodes('add', [...workspaceStore.openedKeys]);
-
-  notificationStore.initData();
 });
 </script>
 
