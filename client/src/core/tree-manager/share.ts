@@ -1,21 +1,19 @@
 // @ts-nocheck
+import { genANodeId } from '@/api/genId';
 import {
   type ElementANode,
   type FileANode,
   type FolderANode,
   type TreeDataCommonType,
 } from '@/types/abstractNode';
-import { nanoid } from 'nanoid';
 
 export const FolderKeySuffix = ';fld';
 
 export class TreeManagerShare {
-  private genId(prefix = '', suffix = '') {
-    return `${prefix}${nanoid(8)}${suffix}`;
-  }
-
-  protected createFolderANode(name: string, isRoot = false): FolderANode {
-    const children = !isRoot ? [] : [this.createFolderANode('src', false)];
+  protected async createFolderANode(name: string, isRoot = false): FolderANode {
+    const children = !isRoot
+      ? []
+      : [await this.createFolderANode('src', false)];
     return {
       name,
       isRoot,
@@ -23,11 +21,11 @@ export class TreeManagerShare {
       isLeaf: false,
       isFolder: true,
       timestamp: Date.now(),
-      key: this.genId('P', FolderKeySuffix),
+      key: await genANodeId(FolderKeySuffix),
     };
   }
 
-  protected createFileANode(name: string): FileANode {
+  protected async createFileANode(name: string): FileANode {
     return {
       name,
       style: '',
@@ -35,11 +33,11 @@ export class TreeManagerShare {
       anodes: [],
       isFile: true,
       isLeaf: true,
-      key: this.genId('G'),
+      key: await genANodeId(),
     };
   }
 
-  protected createElementANode(
+  protected async createElementANode(
     tagName: string,
     x: number,
     y: number
@@ -62,7 +60,7 @@ export class TreeManagerShare {
       textContent: '',
       props: {},
       directives: {},
-      key: this.genId('Z'),
+      key: await genANodeId(),
     };
   }
 
