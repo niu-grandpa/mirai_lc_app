@@ -95,7 +95,11 @@
 import { FolderKeySuffix } from '@/core/tree-manager/share';
 import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
 import { FolderANode, type FileANode } from '@/share/abstractNode';
-import { ANODE_ACTION_KEY, ANodeActionTitles } from '@/share/enums';
+import {
+  ANODE_ACTION_KEY,
+  ANodeActionTitles,
+  DOWNLOAD_FILE_TYPE,
+} from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { PlusOutlined } from '@ant-design/icons-vue';
 import { Checkbox, message, Modal } from 'ant-design-vue';
@@ -116,6 +120,7 @@ const currentNodeKey = ref('');
 const currentNodeName = ref('');
 const showCreate = ref(true);
 const showPaste = ref(true);
+const showDownload = ref(true);
 const showDelPrompt = ref(false);
 const autoExpandParent = ref(false);
 const expandedKeys = ref<string[]>([]);
@@ -161,6 +166,7 @@ watch(() => searchValue.value, onSearch);
 const isCtxOptHidden = (k: ANODE_ACTION_KEY) => {
   return (
     (k === ANODE_ACTION_KEY.PASTE && !showPaste.value) ||
+    (k === ANODE_ACTION_KEY.DOWNLOAD && !showDownload.value) ||
     ([ANODE_ACTION_KEY.CREATE_FOLDER, ANODE_ACTION_KEY.CREATE_FILE].includes(
       k
     ) &&
@@ -184,6 +190,7 @@ const onRightClick = ({
   const hidden = !node.isRoot && !node.isLeaf;
   showCreate.value = hidden;
   showPaste.value = hidden;
+  showDownload.value = node.isFile;
 };
 
 const onCtxMenuClick = (
@@ -199,6 +206,9 @@ const onCtxMenuClick = (
     [ANODE_ACTION_KEY.COPY]: () => setCloneNodeKeys('copy', keys),
     [ANODE_ACTION_KEY.CUT]: () => setCloneNodeKeys('cut', keys),
     [ANODE_ACTION_KEY.PASTE]: pasteNode,
+    [ANODE_ACTION_KEY.DOWNLOAD]: () => {
+      store.download(DOWNLOAD_FILE_TYPE.VUE, key);
+    },
     [ANODE_ACTION_KEY.RENAME]: () => (openRenameOrCreateModal.value = true),
     [ANODE_ACTION_KEY.DELETE]: () => onDeleteNode(keys),
   };
@@ -215,7 +225,7 @@ const openCreateModal = () => {
   openRenameOrCreateModal.value = true;
 };
 
-const onRenameOrCreateNode = () => {
+const onRenameOrCreateNode = async () => {
   const menuKey = ctxMenuKey.value!;
   const name = currentNodeName.value;
 
@@ -231,7 +241,7 @@ const onRenameOrCreateNode = () => {
   ].includes(menuKey);
   if (isCreate) {
     try {
-      store.createAndInsertNode({
+      await store.createAndInsertNode({
         name,
         // @ts-ignore
         type: menuKey,
