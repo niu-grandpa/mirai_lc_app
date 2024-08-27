@@ -1,4 +1,4 @@
-import { type ElementANode } from '@/types/abstractNode';
+import { type ElementANode } from '@/share/abstractNode';
 import interact from 'interactjs';
 import { onBeforeUnmount, onMounted } from 'vue';
 

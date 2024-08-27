@@ -1,3 +1,4 @@
+import { downloadFile, downloadProject } from '@/api/download';
 import { type CreateANodeOptions } from '@/core/tree-manager/handler';
 import { useTreeManager } from '@/hooks';
 import { getLocalItem, setLocalItem } from '@/share';
@@ -7,8 +8,9 @@ import {
   type FolderANode,
   type TreeDataCommonType,
 } from '@/share/abstractNode';
-import { LOCAL_ITEM_KEY } from '@/share/enums';
+import { DOWNLOAD_FILE_TYPE, LOCAL_ITEM_KEY } from '@/share/enums';
 import { defineStore } from 'pinia';
+import { useCommonStore } from './commonStore';
 import mockTreeData from './mock_data.json';
 
 export interface WorkspaceState {
@@ -31,6 +33,7 @@ export const useWorkspaceStore = defineStore('workspace', {
   }),
 
   getters: {
+    commonStore: () => useCommonStore(),
     treeData: state => state._treeData,
     selectedKey: state => state._selectedKey,
     openedKeys: state => state._openedKeys,
@@ -112,8 +115,8 @@ export const useWorkspaceStore = defineStore('workspace', {
       return treeManager.setData(this.treeData).findKeysByName(name);
     },
 
-    createAndInsertNode(opts: CreateANodeOptions) {
-      treeManager.setData(this.treeData).createAndInsertNode(opts);
+    async createAndInsertNode(opts: CreateANodeOptions) {
+      await treeManager.setData(this.treeData).createAndInsertNode(opts);
       this.updateData(this.treeData);
     },
 
@@ -149,6 +152,21 @@ export const useWorkspaceStore = defineStore('workspace', {
       const newData = treeManager.setData(this.treeData).dragNode(info);
       this.updateData(newData);
       treeManager.freed();
+    },
+
+    async download(type: DOWNLOAD_FILE_TYPE, key: string, isProject = false) {
+      try {
+        const node = treeManager.setData(this.treeData).findNode(key);
+        const data = { type, node };
+
+        this.commonStore.setLoading(true);
+
+        let url = isProject
+          ? await downloadProject(data)
+          : await downloadFile(data);
+      } finally {
+        this.commonStore.setLoading(false);
+      }
     },
   },
 });
