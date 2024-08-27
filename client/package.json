@@ -13,9 +13,9 @@
     "@ant-design/icons-vue": "^7.0.1",
     "@highlightjs/vue-plugin": "^2.1.0",
     "ant-design-vue": "4.x",
+    "axios": "^1.7.5",
     "highlight.js": "^11.10.0",
     "interactjs": "^1.10.27",
-    "nanoid": "^5.0.7",
     "pinia": "^2.1.7",
     "unplugin-auto-import": "^0.18.1",
     "unplugin-vue-components": "^0.27.3",
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@rsbuild/core": "1.0.1-beta.4",
     "@rsbuild/plugin-vue": "1.0.1-beta.4",
+    "@types/node": "^22.5.0",
     "typescript": "^5.5.2"
   }
 }
