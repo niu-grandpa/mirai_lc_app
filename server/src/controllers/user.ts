@@ -1,26 +1,29 @@
-import { RegisterUser, UserModel } from '@/models/user';
+import { GenANodeKey, RegisterUser, UserModel } from '@/models/user';
 import { IReq, IRes, RouteError } from '@/types/types';
 import HttpStatusCodes from 'constants/http_status_codes';
+import logger from 'jet-logger';
+import { customAlphabet, nanoid } from 'nanoid';
 
 class UserController {
   static uid = 0;
 
-  private new(params: RegisterUser): UserModel {
-    const uuid = `${++UserController.uid}_${Date.now().toString().slice(-8)}`;
+  private async new(params: RegisterUser): Promise<UserModel> {
+    const _nanoid = customAlphabet(params.password, 63);
+    const token = `${_nanoid()}${++UserController.uid}`;
     return {
-      uuid,
+      token,
       ...params,
       is_vip: false,
       avatar_url: '',
     };
   }
 
-  async register(req: IReq<{ data: RegisterUser }>, res: IRes): Promise<IRes> {
-    const data = this.new(req.body.data);
+  async register(req: IReq<RegisterUser>, res: IRes): Promise<IRes> {
+    const data = await this.new(req.body);
     try {
       // TODO 查询邮箱是否已注册
       return res.status(HttpStatusCodes.OK).json({ data });
-    } catch (error) {
+    } catch {
       throw new RouteError(
         HttpStatusCodes.INTERNAL_SERVER_ERROR,
         '用户注册失败'
@@ -28,8 +31,15 @@ class UserController {
     }
   }
 
-  genFileKey(prefix = '', suffix = ''): string {
-    // TODO nanoid
+  async genANodeKey(req: IReq<GenANodeKey>, res: IRes): Promise<IRes> {
+    try {
+      const { suffix } = req.body;
+      const key = `${nanoid()}${suffix ?? ''}`;
+      return res.status(HttpStatusCodes.OK).json({ data: key });
+    } catch (e) {
+      logger.err(e.message);
+      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+    }
   }
 }
 
