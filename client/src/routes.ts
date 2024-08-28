@@ -23,7 +23,10 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/workspace',
-    component: () => import('./views/WorkSpace.vue'),
+    meta: {
+      title: 'mirai - 工作区',
+    },
+    component: () => import('./views/WorkSpace/Index.vue'),
   },
 ];
 
