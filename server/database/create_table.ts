@@ -1,4 +1,4 @@
-import { queryDB } from 'database';
+import { useDB } from 'database';
 import { readFileSync } from 'fs';
 import path from 'path';
 
@@ -13,8 +13,8 @@ export default function createTable() {
   );
 
   const promises = [
-    queryDB(createUsersTableQuery),
-    queryDB(createDownloadTableQuery),
+    useDB(createUsersTableQuery),
+    useDB(createDownloadTableQuery),
   ];
 
   return new Promise((res, rej) => {
