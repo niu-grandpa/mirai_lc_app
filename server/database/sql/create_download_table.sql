@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS download (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  file_key VARCHAR(8) NOT NULL,
+  file_key VARCHAR(32) PRIMARY KEY,
   link VARCHAR(255) NOT NULL,
-  expiration_time TIMESTAMP NOT NULL
+  expiration_time BIGINT NOT NULL
 )

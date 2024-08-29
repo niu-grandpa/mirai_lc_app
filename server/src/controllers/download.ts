@@ -1,4 +1,4 @@
-import { type DownloadModel } from '@/models/download';
+import { DownloadReq, type DownloadModel } from '@/models/download';
 import {
   type ElementANode,
   type FileANode,
@@ -8,19 +8,20 @@ import { RouteError, type IReq, type IRes } from '@/types/types';
 import { camelToKebabCase } from '@/util/misc';
 import AdmZip from 'adm-zip';
 import HttpStatusCodes from 'constants/http_status_codes';
-import { queryDB } from 'database';
+import { useDB } from 'database';
 import fs from 'fs';
+import logger from 'jet-logger';
 import path from 'path';
 
 const admzip = new AdmZip();
 
 class Share {
   protected async insertIntoDB(model: DownloadModel) {
-    const insertKeys = Object.keys(model).join(',');
-    const insertValues = Object.values(model);
-    await queryDB(
-      `INSERT INTO download (${insertKeys}) VALUES (?)`,
-      insertValues
+    const keys = Object.keys(model).join(',');
+    const values = Object.values(model);
+    await useDB(
+      `INSERT INTO download (${keys}) VALUES (?,?,?) ON DUPLICATE KEY UPDATE expiration_time = VALUES(expiration_time)`,
+      values
     );
   }
 
@@ -135,32 +136,30 @@ export class DownloadController extends Share {
   }
 
   async createWholeProject(
-    req: IReq<{ data: FolderANode }>,
+    req: IReq<DownloadReq<FolderANode>>,
     res: IRes
   ): Promise<IRes> {
     try {
-      const data = await this._createOneWhole(req.body.data);
-      return res.status(HttpStatusCodes.OK).json({ data });
-    } catch (error) {
-      throw new RouteError(
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        JSON.stringify(error)
-      );
+      const { type, node } = req.body;
+      const { link } = await this._createOneWhole(node);
+      return res.status(HttpStatusCodes.OK).json({ data: link });
+    } catch (e) {
+      logger.err(e.message);
+      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
     }
   }
 
   async createOneFile(
-    req: IReq<{ data: FileANode }>,
+    req: IReq<DownloadReq<FileANode>>,
     res: IRes
   ): Promise<IRes> {
     try {
-      const model = this._createOneFile(req.body.data);
-      return res.status(HttpStatusCodes.OK).json({ data: model });
-    } catch (error) {
-      throw new RouteError(
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        JSON.stringify(error)
-      );
+      const { type, node } = req.body;
+      const { link } = await this._createOneFile(node);
+      return res.status(HttpStatusCodes.OK).json({ data: link });
+    } catch (e) {
+      logger.err(e.message);
+      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
     }
   }
 
@@ -177,8 +176,8 @@ export class DownloadController extends Share {
   }
 
   protected async _createOneWhole(data: FolderANode): Promise<DownloadModel> {
-    const filename = `${data.name}_${data.key}`;
-    const filepath = path.join(this._resDir, `${filename}`);
+    const filename = `(${data.name})_${data.key}`;
+    const filepath = path.join(this._resDir, filename);
     const model = this._createModel(data.key, filename, 'zip');
 
     const handleFilesCreation = async (
@@ -207,8 +206,8 @@ export class DownloadController extends Share {
 
     fs.mkdirSync(filepath, { recursive: true });
     await handleFilesCreation(filepath, data.children);
+    fs.rmSync(filepath, { recursive: true });
 
-    fs.rmdirSync(filepath, { recursive: true });
     model.expiration_time = this._addHoursToTimestamp();
 
     await this.insertIntoDB(model);

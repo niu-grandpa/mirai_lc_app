@@ -3,7 +3,7 @@ import { Router } from 'express';
 
 const router = Router();
 
-router.post('/project', controller.createWholeProject);
-router.post('/file', controller.createOneFile);
+router.post('/project', (req, res) => controller.createWholeProject(req, res));
+router.post('/file', (req, res) => controller.createOneFile(req, res));
 
 export default router;
