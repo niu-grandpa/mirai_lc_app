@@ -3,7 +3,7 @@ import { type AxiosRequestConfig } from 'axios';
 
 export default {
   method: 'GET',
-  timeout: 2000,
+  timeout: 10000,
   headers: {
     Authorization: getLocalItem('USER_TOKEN'),
   },
