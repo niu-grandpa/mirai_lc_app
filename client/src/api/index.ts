@@ -5,16 +5,32 @@ import axios, { type AxiosRequestConfig } from 'axios';
 const createRequest = () => {
   const _axios = axios;
 
-  _axios.interceptors.request.use(v => Object.assign(net, v));
-
-  _axios.interceptors.response.use(v => {
-    if (v.status !== 200) {
-      message.error('接口请求出错');
-    } else if (process.env.NODE_ENV === 'development') {
-      console.log('response: ', v.data);
+  _axios.interceptors.request.use(
+    v => {
+      if (v.method === 'GET') {
+        v.params = Object.assign(v.data, v.params);
+        v.data = {};
+      }
+      return Object.assign(net, v);
+    },
+    err => {
+      message.error('网络请求错误');
+      return Promise.reject(err);
     }
-    return v;
-  });
+  );
+
+  _axios.interceptors.response.use(
+    res => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('response: ', res.data);
+      }
+      return res;
+    },
+    err => {
+      message.error('服务器错误，请稍后再试。');
+      return Promise.reject(err);
+    }
+  );
 
   return <T>(config: AxiosRequestConfig) => {
     return new Promise<{ data: T }>(async (resolve, reject) => {
