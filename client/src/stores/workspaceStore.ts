@@ -9,6 +9,7 @@ import {
   type TreeDataCommonType,
 } from '@/share/abstractNode';
 import { DOWNLOAD_FILE_TYPE, LOCAL_ITEM_KEY } from '@/share/enums';
+import { message } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 import { useCommonStore } from './commonStore';
 import mockTreeData from './mock_data.json';
@@ -156,14 +157,24 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     async download(type: DOWNLOAD_FILE_TYPE, key: string, isProject = false) {
       try {
-        const node = treeManager.setData(this.treeData).findNode(key);
-        const data = { type, node };
-
         this.commonStore.setLoading(true);
 
-        let url = isProject
+        const node = treeManager.setData(this.treeData).findNode(key);
+        const link = document.createElement('a');
+        const data = { type, node };
+
+        const url = isProject
           ? await downloadProject(data)
           : await downloadFile(data);
+
+        message.success('导出成功');
+        document.body.appendChild(link);
+
+        link.href = `${import.meta.env.PUBLIC_PROXY}${url}`;
+        link.download = url.split('/').pop()!;
+        link.click();
+
+        document.body.removeChild(link);
       } finally {
         this.commonStore.setLoading(false);
       }
