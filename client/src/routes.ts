@@ -3,7 +3,7 @@ import { RouteRecordRaw } from 'vue-router';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: () => import('./views/WorkSpace.vue'),
+    component: () => import('./views/WorkSpace/Index.vue'),
   },
   {
     path: '/index',

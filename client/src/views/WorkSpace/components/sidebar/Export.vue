@@ -67,7 +67,7 @@ const onDownload = (e: any) => {
     message.info('请选择选择要导出的项目');
     return;
   }
-  store.download(e.key, nodeKey);
+  store.download(e.key, nodeKey, true);
 };
 </script>
 
