@@ -9,6 +9,7 @@ interface ShareType {
 interface ObjectMap extends Record<string, string | symbol | number | any> {}
 
 export interface FolderANode extends ShareType {
+  isRoot?: boolean;
   children: (FolderANode | FileANode)[];
   isFolder: boolean;
 }
