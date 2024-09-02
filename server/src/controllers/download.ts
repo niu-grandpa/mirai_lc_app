@@ -1,4 +1,8 @@
-import { DownloadReq, type DownloadModel } from '@/models/download';
+import {
+  DOWNLOAD_FILE_TYPE,
+  DownloadReq,
+  type DownloadModel,
+} from '@/models/download';
 import {
   type ElementANode,
   type FileANode,
@@ -19,10 +23,7 @@ class Share {
   protected async insertIntoDB(model: DownloadModel) {
     const keys = Object.keys(model).join(',');
     const values = Object.values(model);
-    await useDB(
-      `INSERT INTO download (${keys}) VALUES (?,?,?) ON DUPLICATE KEY UPDATE expiration_time = VALUES(expiration_time)`,
-      values
-    );
+    await useDB(`REPLACE INTO download (${keys}) VALUES (?,?)`, values);
   }
 
   protected compileToVue(data: FileANode) {
@@ -156,7 +157,7 @@ export class DownloadController extends Share {
   ): Promise<IRes> => {
     try {
       const { type, node } = req.body;
-      const { link } = await this._createOneFile(node);
+      const { link } = await this._createOneFile(type, node);
       return res.status(HttpStatusCodes.OK).json({ data: link });
     } catch (e) {
       logger.err(e.message);
@@ -167,12 +168,11 @@ export class DownloadController extends Share {
   private _createModel(
     file_key: string,
     filename: string,
-    format: 'vue' | 'zip' | 'html'
+    format: 'vue' | 'zip' | 'json'
   ): DownloadModel {
     return {
       file_key,
       link: `/download/${filename}.${format}`,
-      expiration_time: 0,
     };
   }
 
@@ -208,19 +208,28 @@ export class DownloadController extends Share {
     await this._packageFiles(targetPath, filename);
     fs.rmSync(targetPath, { recursive: true });
 
-    model.expiration_time = this._addHoursToTimestamp();
     await this.insertIntoDB(model);
 
     return model;
   }
 
-  protected async _createOneFile(data: FileANode): Promise<DownloadModel> {
+  protected async _createOneFile(
+    type: DOWNLOAD_FILE_TYPE,
+    data: FileANode
+  ): Promise<DownloadModel> {
     const model = this._createModel(data.key, data.name, 'vue');
-    const filePath = path.join(this._resDir, `${data.name}.vue`);
-    const { template, script, style } = this.compileToVue(data);
+    const filePath = path.join(
+      this._resDir,
+      `${data.name}.${type.toLowerCase()}`
+    );
 
-    fs.writeFileSync(filePath, `${template}${script}${style}`);
-    model.expiration_time = this._addHoursToTimestamp();
+    if (type === DOWNLOAD_FILE_TYPE.VUE) {
+      const { template, script, style } = this.compileToVue(data);
+      fs.writeFileSync(filePath, `${template}${script}${style}`);
+    } else if (type === DOWNLOAD_FILE_TYPE.JSON) {
+      fs.writeJsonSync(filePath, data, { spaces: 2, EOL: '\r\n' });
+    }
+
     await this.insertIntoDB(model);
 
     return model;
