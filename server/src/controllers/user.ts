@@ -18,7 +18,7 @@ class UserController {
     };
   }
 
-  async register(req: IReq<RegisterUser>, res: IRes): Promise<IRes> {
+  register = async (req: IReq<RegisterUser>, res: IRes): Promise<IRes> => {
     const data = await this.new(req.body);
     try {
       // TODO 查询邮箱是否已注册
@@ -29,9 +29,9 @@ class UserController {
         '用户注册失败'
       );
     }
-  }
+  };
 
-  async genANodeKey(req: IReq<GenANodeKey>, res: IRes): Promise<IRes> {
+  genANodeKey = async (req: IReq<GenANodeKey>, res: IRes): Promise<IRes> => {
     try {
       const { suffix } = req.body;
       const key = `${nanoid()}${suffix ?? ''}`;
@@ -40,7 +40,7 @@ class UserController {
       logger.err(e.message);
       throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
     }
-  }
+  };
 }
 
 const controller = new UserController();
