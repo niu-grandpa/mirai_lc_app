@@ -9,7 +9,7 @@ import { camelToKebabCase } from '@/util/misc';
 import AdmZip from 'adm-zip';
 import HttpStatusCodes from 'constants/http_status_codes';
 import { useDB } from 'database';
-import fs from 'fs';
+import fs from 'fs-extra';
 import logger from 'jet-logger';
 import path from 'path';
 
@@ -130,15 +130,16 @@ class Share {
 
 export class DownloadController extends Share {
   private _resDir = path.resolve(__dirname, '../../public/download');
+  private _templateDir = path.resolve(__dirname, '../../static/template');
 
   constructor() {
     super();
   }
 
-  async createWholeProject(
+  createWholeProject = async (
     req: IReq<DownloadReq<FolderANode>>,
     res: IRes
-  ): Promise<IRes> {
+  ): Promise<IRes> => {
     try {
       const { type, node } = req.body;
       const { link } = await this._createOneWhole(node);
@@ -147,12 +148,12 @@ export class DownloadController extends Share {
       logger.err(e.message);
       throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
     }
-  }
+  };
 
-  async createOneFile(
+  createOneFile = async (
     req: IReq<DownloadReq<FileANode>>,
     res: IRes
-  ): Promise<IRes> {
+  ): Promise<IRes> => {
     try {
       const { type, node } = req.body;
       const { link } = await this._createOneFile(node);
@@ -161,7 +162,7 @@ export class DownloadController extends Share {
       logger.err(e.message);
       throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
     }
-  }
+  };
 
   private _createModel(
     file_key: string,
@@ -176,14 +177,13 @@ export class DownloadController extends Share {
   }
 
   protected async _createOneWhole(data: FolderANode): Promise<DownloadModel> {
-    const filename = `(${data.name})_${data.key}`;
-    const filepath = path.join(this._resDir, filename);
+    const filename = `(${data.name})_${data.key.replace(';fld', '')}`;
+    const targetPath = path.join(this._resDir, filename);
     const model = this._createModel(data.key, filename, 'zip');
 
-    const handleFilesCreation = async (
-      rootPath: string,
-      data: FolderANode['children']
-    ) => {
+    fs.mkdirSync(targetPath, { recursive: true });
+
+    const createFiles = (rootPath: string, data: FolderANode['children']) => {
       if (!data.length) return;
 
       const iterators = (child: any) => {
@@ -191,7 +191,7 @@ export class DownloadController extends Share {
           const _child = child as FolderANode;
           const subfolderPath = path.join(rootPath, _child.name);
           fs.mkdirSync(subfolderPath);
-          handleFilesCreation(subfolderPath, _child.children);
+          createFiles(subfolderPath, _child.children);
         } else if (child.isFile) {
           const filePath = path.join(rootPath, `${child.name}.vue`);
           const { template, script, style } = this.compileToVue(child);
@@ -200,17 +200,17 @@ export class DownloadController extends Share {
       };
 
       data.forEach(iterators);
-
-      await this._createZipFile(filepath, filename);
     };
 
-    fs.mkdirSync(filepath, { recursive: true });
-    await handleFilesCreation(filepath, data.children);
-    fs.rmSync(filepath, { recursive: true });
+    createFiles(targetPath, data.children);
+    fs.copySync(path.join(this._templateDir, 'vue-project'), targetPath);
+
+    await this._packageFiles(targetPath, filename);
+    fs.rmSync(targetPath, { recursive: true });
 
     model.expiration_time = this._addHoursToTimestamp();
-
     await this.insertIntoDB(model);
+
     return model;
   }
 
@@ -226,7 +226,7 @@ export class DownloadController extends Share {
     return model;
   }
 
-  private _createZipFile(sourceDir: string, filename: string) {
+  private _packageFiles(sourceDir: string, filename: string) {
     admzip.addLocalFolder(sourceDir, filename);
     return admzip.writeZipPromise(`${sourceDir}.zip`);
   }
