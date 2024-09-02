@@ -1,10 +1,9 @@
 export interface DownloadModel {
   file_key: string;
   link: string;
-  expiration_time: number;
 }
 
-enum DOWNLOAD_FILE_TYPE {
+export enum DOWNLOAD_FILE_TYPE {
   VUE = 'VUE',
   HTML = 'HTML',
   JSON = 'JSON',
