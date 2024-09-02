@@ -1,7 +1,8 @@
 import {
-  BgColorsOutlined,
-  ExportOutlined,
+  CloudDownloadOutlined,
+  HighlightOutlined,
   LaptopOutlined,
+  LayoutOutlined,
   SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons-vue';
@@ -43,19 +44,19 @@ export const PANEL_OPTIONS: PanelOptions[] = [
   },
   {
     title: '组件面板',
-    icon: BgColorsOutlined,
+    icon: LayoutOutlined,
     key: RIGHT_OPTIONS.COMPONENT,
     active: false,
   },
   {
     title: '样式调节',
-    icon: BgColorsOutlined,
+    icon: HighlightOutlined,
     key: RIGHT_OPTIONS.STYLE,
     active: false,
   },
   {
     title: '导出',
-    icon: ExportOutlined,
+    icon: CloudDownloadOutlined,
     key: RIGHT_OPTIONS.EXPORT,
     active: false,
   },
