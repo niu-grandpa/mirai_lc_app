@@ -5,6 +5,7 @@ import EnvVars from '../constants/env_vars';
 import server from './server';
 
 import '../database';
+import '../database/schedule';
 
 // **** Run **** //
 
