@@ -9,6 +9,6 @@ const upload = multer({
   dest: path.join(__dirname, '../../public/uploads/'),
 });
 
-router.post('/work-file', upload.single('jsonFile'), controller.readJsonFile);
+router.post('/work-file', upload.single('workFile'), controller.readJsonFile);
 
 export default router;
