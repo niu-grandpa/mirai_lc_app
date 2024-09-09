@@ -1,13 +1,13 @@
 import net from '@/config/net';
 import { message } from 'ant-design-vue';
-import axios, { type AxiosRequestConfig } from 'axios';
+import axios, { type Axios, type AxiosRequestConfig } from 'axios';
 
 const createRequest = () => {
   const _axios = axios;
 
   _axios.interceptors.request.use(
     v => {
-      if (v.method === 'GET') {
+      if (v.method === 'GET' || v.method === 'DELETE') {
         v.params = Object.assign(v.data, v.params);
         v.data = {};
       }
@@ -35,7 +35,8 @@ const createRequest = () => {
   return <T>(config: AxiosRequestConfig) => {
     return new Promise<{ data: T }>(async (resolve, reject) => {
       try {
-        const { data } = await _axios(config);
+        const method = config.method?.toLowerCase() as keyof typeof Axios;
+        const { data } = await _axios[method](config.url, config.data);
         resolve(data);
       } catch (error) {
         reject(error);
