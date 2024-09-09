@@ -4,6 +4,13 @@
     style="margin-bottom: 8px"
     placeholder="搜索文件" />
 
+  <input
+    ref="fileInput"
+    type="file"
+    accept=".json"
+    style="display: none"
+    @change="onUploadAndAddTreeNode" />
+
   <section class="empty" v-if="!store.treeData.length">
     <a-empty />
     <a-button
@@ -120,6 +127,7 @@ const currentNodeKey = ref('');
 const currentNodeName = ref('');
 const showCreate = ref(true);
 const showPaste = ref(true);
+const showImport = ref(true);
 const showDownload = ref(true);
 const showDelPrompt = ref(false);
 const autoExpandParent = ref(false);
@@ -127,6 +135,7 @@ const expandedKeys = ref<string[]>([]);
 const ctxMenuKey = ref<ANODE_ACTION_KEY>();
 const openRenameOrCreateModal = ref(false);
 const maxHeight = ref(getWinHeight() - 58);
+const fileInput = ref<HTMLInputElement>();
 const cloneNodeKeys = reactive<{ keys: string[]; type: 'copy' | 'cut' }>({
   keys: [],
   type: 'copy',
@@ -163,9 +172,25 @@ const onSearch = (value: string) => {
 
 watch(() => searchValue.value, onSearch);
 
+const onUploadAndAddTreeNode = async () => {
+  const fs = fileInput.value?.files;
+  if (fs?.length) {
+    try {
+      await store.uploadAndAddNodes(fs[0], currentNodeKey.value);
+    } catch (e: Error) {
+      message.error(
+        e.message ?? '无法识别文件内容，请确保数据格式符合既定标准'
+      );
+    } finally {
+      fileInput.value!.value = '';
+    }
+  }
+};
+
 const isCtxOptHidden = (k: ANODE_ACTION_KEY) => {
   return (
     (k === ANODE_ACTION_KEY.PASTE && !showPaste.value) ||
+    (k === ANODE_ACTION_KEY.IMPORT && !showImport.value) ||
     (k === ANODE_ACTION_KEY.DOWNLOAD && !showDownload.value) ||
     ([ANODE_ACTION_KEY.CREATE_FOLDER, ANODE_ACTION_KEY.CREATE_FILE].includes(
       k
@@ -190,6 +215,7 @@ const onRightClick = ({
   const hidden = !node.isRoot && !node.isLeaf;
   showCreate.value = hidden;
   showPaste.value = hidden;
+  showImport.value = hidden;
   showDownload.value = node.isFile;
 };
 
@@ -206,6 +232,9 @@ const onCtxMenuClick = (
     [ANODE_ACTION_KEY.COPY]: () => setCloneNodeKeys('copy', keys),
     [ANODE_ACTION_KEY.CUT]: () => setCloneNodeKeys('cut', keys),
     [ANODE_ACTION_KEY.PASTE]: pasteNode,
+    [ANODE_ACTION_KEY.IMPORT]: () => {
+      fileInput.value?.click();
+    },
     [ANODE_ACTION_KEY.DOWNLOAD]: () => {
       store.download(DOWNLOAD_FILE_TYPE.VUE, key);
     },
