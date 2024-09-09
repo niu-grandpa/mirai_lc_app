@@ -1,4 +1,5 @@
 import { downloadFile, downloadProject } from '@/api/download';
+import { readWorkFile } from '@/api/upload';
 import { type CreateANodeOptions } from '@/core/tree-manager/handler';
 import { useTreeManager } from '@/hooks';
 import { getLocalItem, setLocalItem } from '@/share';
@@ -178,6 +179,11 @@ export const useWorkspaceStore = defineStore('workspace', {
       } finally {
         this.commonStore.setLoading(false);
       }
+    },
+
+    async uploadAndAddNodes(file: File, key: string) {
+      const data = await readWorkFile(file);
+      this.addOneNode(key, data);
     },
   },
 });
