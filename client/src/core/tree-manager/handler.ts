@@ -6,6 +6,7 @@ import {
 } from '@/share/abstractNode';
 import { ANODE_ACTION_KEY } from '@/share/enums';
 import { type AntTreeNodeDropEvent } from 'ant-design-vue/es/tree';
+import deepmerge from 'deepmerge';
 import { TreeManagerShare } from './share';
 
 export interface CreateANodeOptions {
@@ -96,14 +97,14 @@ export default class TreeManager extends TreeManagerShare {
    * @param value 要更新的属性对象
    */
   updateOneNode(key: string, value: Partial<TreeDataCommonType>) {
-    this.recursiveFindAndProcess(this.getData(), key, node => {
+    this.recursiveFindAndProcess(this.temp, key, (node, parentNodes, index) => {
       if (node.name === 'src') {
         throw Error('不允许修改基本目录的名称');
       }
-      Object.assign(node, value);
+      // fix: 深度合并节点，直接修改 parentNodes 数组中的节点
+      parentNodes[index] = deepmerge(node, value);
       return true;
     });
-    this.freed();
   }
 
   /**
