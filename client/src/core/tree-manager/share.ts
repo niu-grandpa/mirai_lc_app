@@ -54,7 +54,7 @@ export class TreeManagerShare {
         class: new Set(),
         style: {
           position: 'absolute',
-          transform: 'translate(0, 0)',
+          transform: `translate(${x}px, ${y}px)`,
         },
       },
       textContent: '',
@@ -75,31 +75,38 @@ export class TreeManagerShare {
   protected recursiveFindAndProcess<T = TreeDataCommonType>(
     nodes: T[],
     key: string,
-    processFn: (node: T, parentNodes: T[]) => boolean,
+    processFn: (node: T, parentNodes: T[], index: number) => boolean,
     parentNodes: T[] = []
   ): boolean {
-    const stack = nodes.map(node => ({ node, parentNodes: nodes }));
+    const stack = nodes.map((node, index) => ({
+      node,
+      parentNodes: nodes,
+      index,
+    }));
 
     while (stack.length) {
-      const { node, parentNodes } = stack.pop();
+      const { node, parentNodes, index } = stack.pop();
       if (node.key === key) {
-        return processFn(node, parentNodes);
+        // fix: 这里通过 processFn 直接修改 parentNodes 中的 node
+        return processFn(node, parentNodes, index);
       }
 
       if (node.children && node.children.length > 0) {
         stack.push(
-          ...node.children.map(child => ({
+          ...node.children.map((child, childIndex) => ({
             node: child,
             parentNodes: node.children,
+            index: childIndex,
           }))
         );
       }
 
       if (node.anodes && node.anodes.length > 0) {
         stack.push(
-          ...node.anodes.map(anode => ({
+          ...node.anodes.map((anode, anodeIndex) => ({
             node: anode,
             parentNodes: node.anodes,
+            index: anodeIndex,
           }))
         );
       }
