@@ -16,7 +16,7 @@ import { useDrag } from '@/hooks';
 import { DRAG_RANGE } from '@/hooks/useDrag';
 import { type ElementANode } from '@/share/abstractNode';
 import { useCommonStore } from '@/stores/commonStore';
-import { message } from 'ant-design-vue';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import AuxLines from './AuxLines.vue';
 import HighlightBox from './HighlightBox.vue';
@@ -24,22 +24,35 @@ import NodeRenderer from './NodeRenderer.vue';
 
 const props = defineProps<{ data: ElementANode[] }>();
 
-const store = useCommonStore();
+const commonStore = useCommonStore();
+const workspaceStore = useWorkspaceStore();
 
 const isShowBox = ref(false);
 const containerRef = ref<HTMLElement>();
 const canvasRef = ref<HTMLCanvasElement>();
 
-try {
-  useDrag(props.data, (action, info) => {
-    store.setDragData(Object.assign(store.dragData, { action, ...info }));
-    if (!isShowBox.value) {
-      isShowBox.value = action !== 'move';
-    }
-  });
-} catch (error) {
-  message.error('内部错误');
-}
+useDrag(props.data, (action, info) => {
+  commonStore.setDragData(
+    Object.assign(commonStore.dragData, { action, ...info })
+  );
+  if (!isShowBox.value) {
+    isShowBox.value = action !== 'move';
+  }
+  if (action === 'resize' || action === 'end') {
+    const { x, y, el, width, height } = info;
+    workspaceStore.updateOneNode(el!.id, {
+      x,
+      y,
+      attrs: {
+        style: {
+          width: `${width}px`,
+          height: `${height}px`,
+          transform: `translate(${x}px, ${y}px)`,
+        },
+      },
+    });
+  }
+});
 
 const createGrids = (w = 0, h = 0) => {
   const canvasEl = canvasRef.value!;
