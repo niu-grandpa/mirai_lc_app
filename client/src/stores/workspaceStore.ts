@@ -13,7 +13,6 @@ import { DOWNLOAD_FILE_TYPE, LOCAL_ITEM_KEY } from '@/share/enums';
 import { message } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 import { useCommonStore } from './commonStore';
-import mockTreeData from './mock_data.json';
 
 export interface WorkspaceState {
   _selectedKey: string[];
@@ -45,9 +44,7 @@ export const useWorkspaceStore = defineStore('workspace', {
 
   actions: {
     getLocalData() {
-      const data =
-        getLocalItem<TreeDataCommonType[]>(LOCAL_ITEM_KEY.FILE_DATA) ||
-        mockTreeData.treeData;
+      const data = getLocalItem<TreeDataCommonType[]>(LOCAL_ITEM_KEY.FILE_DATA);
       this._treeData = treeManager.setData(data).sortNodes();
       treeManager.freed();
     },
@@ -122,7 +119,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       this.updateData(this.treeData);
     },
 
-    updateOneNode(key: string, value: Partial<TreeDataCommonType>) {
+    updateOneNode(key: string, value: object) {
       treeManager.setData(this.treeData).updateOneNode(key, value);
       this.updateData(this.treeData);
     },
