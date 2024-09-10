@@ -14,6 +14,7 @@
     "@highlightjs/vue-plugin": "^2.1.0",
     "ant-design-vue": "4.x",
     "axios": "^1.7.5",
+    "deepmerge": "^4.3.1",
     "highlight.js": "^11.10.0",
     "interactjs": "^1.10.27",
     "pinia": "^2.1.7",
