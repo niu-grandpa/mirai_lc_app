@@ -12,7 +12,10 @@
     @change="onUploadAndAddTreeNode" />
 
   <section class="empty" v-if="!store.treeData.length">
-    <a-empty />
+    <a-button block :icon="h(UploadOutlined)" @click="fileInput?.click()">
+      导入json
+    </a-button>
+    <p />
     <a-button
       type="primary"
       block
@@ -108,7 +111,7 @@ import {
   DOWNLOAD_FILE_TYPE,
 } from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { PlusOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import { Checkbox, message, Modal } from 'ant-design-vue';
 import {
   h,
@@ -358,6 +361,7 @@ const onDeleteNode = async (keys: string[]) => {
 
 <style scoped>
 .empty {
+  width: 80%;
   position: absolute;
   top: 50%;
   left: 50%;
