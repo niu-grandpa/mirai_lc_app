@@ -37,3 +37,5 @@ export enum DOWNLOAD_FILE_TYPE {
   HTML = 'HTML',
   JSON = 'JSON',
 }
+
+export const VISUAL_CLASS_NAME = 'workspace-visual';
