@@ -18,16 +18,22 @@ import { useCommonStore } from '@/stores/commonStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { theme } from 'ant-design-vue';
 import { onBeforeMount } from 'vue';
+import { useNodeManagerStore } from './stores/nodeManagerStore';
 
 const commonStore = useCommonStore();
 const workspaceStore = useWorkspaceStore();
+const nodeManagerStore = useNodeManagerStore();
 
 onBeforeMount(() => {
-  workspaceStore.getLocalData();
-  workspaceStore.updateSelectedKey();
-  workspaceStore.updateExpandedKeys();
-  workspaceStore.initOpenedKeys();
-  workspaceStore.updateOpenedFileANodes('add', [...workspaceStore.openedKeys]);
+  workspaceStore.getLocalWorkData();
+
+  nodeManagerStore.updateSelectedKeys();
+  nodeManagerStore.updateExpandedKeys();
+
+  workspaceStore.initOpenedFileKeys();
+  workspaceStore.updateOpenedFilesByKeys('add', [
+    ...workspaceStore.openedFileKeys,
+  ]);
 });
 </script>
 
