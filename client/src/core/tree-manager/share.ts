@@ -5,12 +5,15 @@ import {
   type FileANode,
   type FolderANode,
   type TreeDataCommonType,
-} from '@/types/abstractNode';
+} from '@/share/abstractNode';
 
 export const FolderKeySuffix = ';fld';
 
 export class TreeManagerShare {
-  protected async createFolderANode(name: string, isRoot = false): FolderANode {
+  protected async createFolderANode(
+    name: string,
+    isRoot = false
+  ): Promise<FolderANode> {
     const children = !isRoot
       ? []
       : [await this.createFolderANode('src', false)];
@@ -25,11 +28,9 @@ export class TreeManagerShare {
     };
   }
 
-  protected async createFileANode(name: string): FileANode {
+  protected async createFileANode(name: string): Promise<FileANode> {
     return {
       name,
-      style: '',
-      script: '',
       anodes: [],
       isFile: true,
       isLeaf: true,
@@ -41,7 +42,7 @@ export class TreeManagerShare {
     tagName: string,
     x: number,
     y: number
-  ): ElementANode {
+  ): Promise<ElementANode> {
     return {
       x,
       y,
@@ -51,7 +52,7 @@ export class TreeManagerShare {
       children: [],
       name: tagName,
       attrs: {
-        class: new Set(),
+        class: {},
         style: {
           position: 'absolute',
           transform: `translate(${x}px, ${y}px)`,
@@ -72,7 +73,7 @@ export class TreeManagerShare {
    * @param parentNodes 父节点数组
    * @returns 是否成功处理节点
    */
-  protected recursiveFindAndProcess<T = TreeDataCommonType>(
+  protected recursiveFindAndProcess<T extends TreeDataCommonType>(
     nodes: T[],
     key: string,
     processFn: (node: T, parentNodes: T[], index: number) => boolean,
@@ -136,7 +137,7 @@ export class TreeManagerShare {
    * @param keys 节点键数组
    * @returns 查找到的节点数组
    */
-  protected findNodesByKeys<T = TreeDataCommonType>(
+  protected findNodesByKeys<T extends TreeDataCommonType>(
     nodes: T[],
     keys: string[]
   ): T[] {
@@ -177,14 +178,15 @@ export class TreeManagerShare {
    * 重设节点及其子节点的 key
    * @param nodes 要重设的节点数组
    */
-  protected refreshNodeKeys(nodes: TreeDataCommonType[]) {
-    nodes.forEach(node => {
-      node.key = this.genId();
+  protected async refreshNodeKeys(nodes: TreeDataCommonType[]) {
+    const fn = nodes.map(async node => {
+      node.key = await genANodeId();
       if (node?.children) {
-        this.refreshNodeKeys(node.children);
+        await this.refreshNodeKeys(node.children);
       } else if (node?.anodes) {
-        this.refreshNodeKeys(node.anodes);
+        await this.refreshNodeKeys(node.anodes);
       }
     });
+    await Promise.all(fn);
   }
 }
