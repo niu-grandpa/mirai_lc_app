@@ -281,7 +281,7 @@ export default class TreeManager extends TreeManagerShare {
 
     await this.refreshNodeKeys(nodesToPaste);
 
-    customNodes(nodesToPaste);
+    customNodes?.(nodesToPaste);
 
     this.recursiveFindAndProcess(this.getData(), targetKey, node => {
       if (node.isFolder) {
