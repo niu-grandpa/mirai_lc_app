@@ -34,7 +34,7 @@ class UserController {
   genANodeKey = async (req: IReq<GenANodeKey>, res: IRes): Promise<IRes> => {
     try {
       const { suffix } = req.body;
-      const key = `${nanoid()}${suffix ?? ''}`;
+      const key = `v${nanoid()}${suffix ?? ''}`;
       return res.status(HttpStatusCodes.OK).json({ data: key });
     } catch (e) {
       logger.err(e.message);
