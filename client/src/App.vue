@@ -17,7 +17,7 @@
 import { useCommonStore } from '@/stores/commonStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { theme } from 'ant-design-vue';
-import { onBeforeMount } from 'vue';
+import { onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useNodeManagerStore } from './stores/nodeManagerStore';
 
 const commonStore = useCommonStore();
@@ -34,6 +34,28 @@ onBeforeMount(() => {
   workspaceStore.updateOpenedFilesByKeys('add', [
     ...workspaceStore.openedFileKeys,
   ]);
+});
+
+const timer = ref();
+
+onMounted(() => {
+  const AUTO_SAVE_DELAY = 4000;
+
+  if (!timer.value) {
+    timer.value = setInterval(() => {
+      workspaceStore.updateWorkData(workspaceStore.workData);
+    }, AUTO_SAVE_DELAY);
+  }
+
+  window.addEventListener('beforeunload', e => {
+    e.preventDefault();
+    e.returnValue = true;
+  });
+});
+
+onBeforeUnmount(() => {
+  clearInterval(timer.value);
+  timer.value = null;
 });
 </script>
 
