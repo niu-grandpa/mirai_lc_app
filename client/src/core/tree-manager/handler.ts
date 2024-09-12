@@ -272,10 +272,17 @@ export default class TreeManager extends TreeManagerShare {
    * @param targetKey 目标节点键
    * @param keys 要粘贴的节点键数组
    */
-  pasteNode(targetKey: string, keys: string[]) {
+  async pasteNode(
+    targetKey: string,
+    keys: string[],
+    customNodes?: (target: any[]) => void
+  ) {
     const nodesToPaste = deepClone(this.findNodesByKeys(this.getData(), keys));
 
-    this.refreshNodeKeys(nodesToPaste);
+    await this.refreshNodeKeys(nodesToPaste);
+
+    customNodes(nodesToPaste);
+
     this.recursiveFindAndProcess(this.getData(), targetKey, node => {
       if (node.isFolder) {
         const existingNames = new Set(node.children.map(child => child.name));
@@ -297,10 +304,10 @@ export default class TreeManager extends TreeManagerShare {
         return true;
         // 在文件树管理模块进行cv操作时不会发生下面的情况，已经从下拉选项阻断了
       } else if (node.isFile) {
-        node.children.push(...nodesToPaste);
+        node.anodes.push(...nodesToPaste);
         return true;
       } else {
-        node.anodes.push(...nodesToPaste);
+        node.children.push(...nodesToPaste);
         return true;
       }
     });
