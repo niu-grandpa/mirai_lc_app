@@ -1,6 +1,7 @@
 import { type ElementANode } from '@/share/abstractNode';
+import { VISUAL_CLASS_NAME } from '@/share/enums';
 import interact from 'interactjs';
-import { onBeforeUnmount, onMounted } from 'vue';
+import { onBeforeUnmount } from 'vue';
 
 export interface UseDragTargetInfo {
   x: number;
@@ -14,9 +15,9 @@ export type UseDragAction = 'end' | 'move' | 'tap' | 'resize';
 
 type Callback = (action: UseDragAction, info: UseDragTargetInfo) => void;
 
-export const DRAG_RANGE = 15;
+export const DRAG_RANGE = 10;
 
-export function useDrag(data: ElementANode[], callback: Callback) {
+export function useDrag(callback: Callback) {
   const setupDraggable = (
     elm: Interact.Interactable,
     position: { x: number; y: number },
@@ -27,7 +28,7 @@ export function useDrag(data: ElementANode[], callback: Callback) {
         return interacting ? 'grabbing' : 'grab';
       },
       autoScroll: {
-        container: '.workspace-visual',
+        container: `.${VISUAL_CLASS_NAME}`,
         margin: 50,
         distance: 5,
         interval: 10,
@@ -44,13 +45,9 @@ export function useDrag(data: ElementANode[], callback: Callback) {
           endOnly: true,
         }),
       ],
-      onstart() {
-        attrs.class['active'] = true;
-      },
       onmove({ dx, dy, target }) {
-        position.x += dx;
-        position.y += dy;
-        attrs.style.transform = `translate(${position.x}px, ${position.y}px)`;
+        position.x += ~~dx;
+        position.y += ~~dy;
         callback('move', {
           el: target,
           ...position,
@@ -59,9 +56,6 @@ export function useDrag(data: ElementANode[], callback: Callback) {
         });
       },
       onend({ target }) {
-        attrs['data-x'] = position.x;
-        attrs['data-y'] = position.y;
-        attrs.class['active'] = false;
         callback('end', {
           el: target,
           ...position,
@@ -74,8 +68,7 @@ export function useDrag(data: ElementANode[], callback: Callback) {
 
   const setupResizable = (
     elm: Interact.Interactable,
-    position: { x: number; y: number },
-    attrs: Record<string, any>
+    position: { x: number; y: number }
   ) => {
     elm.resizable({
       autoScroll: true,
@@ -96,21 +89,12 @@ export function useDrag(data: ElementANode[], callback: Callback) {
         position.x = newX;
         position.y = newY;
 
-        attrs.class['active'] = true;
-        attrs.style.width = `${rect.width}px`;
-        attrs.style.height = `${rect.height}px`;
-
         callback('resize', {
           el: target,
           ...position,
-          width: target.offsetWidth,
-          height: target.offsetHeight,
+          width: rect.width,
+          height: rect.height,
         });
-      },
-      onend() {
-        attrs['data-x'] = position.x;
-        attrs['data-y'] = position.y;
-        attrs.class['active'] = false;
       },
     });
   };
@@ -141,28 +125,27 @@ export function useDrag(data: ElementANode[], callback: Callback) {
     attrs.style.transform = `translate(${position.x}px, ${position.y}px)`;
   };
 
-  const processElement = (node: ElementANode) => {
-    const { x, y, key, attrs, children } = node;
+  const processElement = (data: ElementANode[]) => {
+    const fn = (node: ElementANode) => {
+      const { x, y, key, attrs, children } = node;
 
-    const elm = interact(`#${key}`);
-    const position = { x, y };
+      const elm = interact(`#${key}`);
+      const position = { x: ~~x, y: ~~y };
 
-    initAttrs(key, position, attrs);
+      initAttrs(key, position, attrs);
 
-    setupDraggable(elm, position, attrs);
-    setupResizable(elm, position, attrs);
-    setupTap(elm, position);
+      setupDraggable(elm, position, attrs);
+      setupResizable(elm, position);
+      setupTap(elm, position);
 
-    if (children.length) {
-      children.forEach(child => processElement(child));
-    }
+      if (children.length) {
+        children.forEach(child => fn(child));
+      }
+    };
+    data.forEach(fn);
   };
 
-  onMounted(() => {
-    data.forEach(element => processElement(element));
-  });
+  onBeforeUnmount(interact.stop);
 
-  onBeforeUnmount(() => {
-    interact.stop();
-  });
+  return processElement;
 }
