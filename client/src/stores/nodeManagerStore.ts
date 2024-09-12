@@ -50,25 +50,18 @@ export const useNodeManagerStore = defineStore('nodeManager', {
       const newKeys = this.selectedKeys.filter(k => !keys.includes(k));
       keys.forEach(k => data.removeOneNode(k));
       this.updateSelectedKeys(newKeys);
-      this.workspaceStore.updateWorkData(this.workspaceStore.workData);
       data.freed();
     },
 
     async pasteNode(targetKey: string, keys: string[]) {
-      const newData = (
-        await treeManager
-          .setData(this.workspaceStore.workData)
-          .pasteNode(targetKey, keys)
-      ).getData();
-      this.workspaceStore.updateWorkData(newData);
+      await treeManager
+        .setData(this.workspaceStore.workData)
+        .pasteNode(targetKey, keys);
       treeManager.freed();
     },
 
     dragNode<T>(info: T) {
-      const newData = treeManager
-        .setData(this.workspaceStore.workData)
-        .dragNode(info);
-      this.workspaceStore.updateWorkData(newData);
+      treeManager.setData(this.workspaceStore.workData).dragNode(info);
       treeManager.freed();
     },
 

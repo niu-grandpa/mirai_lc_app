@@ -40,8 +40,10 @@ export const useWorkspaceStore = defineStore('workspace', {
       treeManager.freed();
     },
 
-    updateWorkData(value: FolderANode[]) {
-      const newData = treeManager.setData(value).sortNodes();
+    updateWorkData(value: FolderANode[], sort = true) {
+      const newData = treeManager
+        .setData(value)
+        [sort ? 'sortNodes' : 'getData']();
       treeManager.freed();
       this._workData = newData;
       setLocalItem(LOCAL_ITEM_KEY.FILE_DATA, newData);
@@ -58,23 +60,19 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     async createAndInsertNode(opts: CreateANodeOptions) {
       await treeManager.setData(this.workData).createAndInsertNode(opts);
-      this.updateWorkData(this.workData);
     },
 
-    updateNode(key: string, value: object) {
+    updateNode(key: string, value: object, sort = true) {
       treeManager.setData(this.workData).updateOneNode(key, value);
-      this.updateWorkData(this.workData);
     },
 
     removeNode(key: string) {
       treeManager.setData(this.workData).removeOneNode(key);
-      this.updateWorkData(treeManager.getData());
       treeManager.freed();
     },
 
     addNode(key: string, node: TreeDataCommonType) {
       treeManager.setData(this.workData).addOneNode(key, node);
-      this.updateWorkData(this.workData);
     },
 
     initOpenedFileKeys() {
