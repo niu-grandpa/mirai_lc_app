@@ -1,13 +1,13 @@
 <template>
   <section
-    class="workspace-visual"
+    :class="VISUAL_CLASS_NAME"
     ref="containerRef"
     @click.stop="onClick"
     @scroll="onScroll">
     <canvas ref="canvasRef" />
     <AuxLines />
-    <HighlightBox v-show="isShowBox" />
-    <NodeRenderer v-for="anode in props.data" :key="anode.key" :node="anode" />
+    <HighlightBox v-show="isShowHightlight" />
+    <NodeRenderer v-for="anode in anodeList" :key="anode.key" :node="anode" />
   </section>
 </template>
 
@@ -15,43 +15,72 @@
 import { useDrag } from '@/hooks';
 import { DRAG_RANGE } from '@/hooks/useDrag';
 import { type ElementANode } from '@/share/abstractNode';
+import { VISUAL_CLASS_NAME } from '@/share/enums';
 import { useCommonStore } from '@/stores/commonStore';
+import { useSidebarStore } from '@/stores/sidebarStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import AuxLines from './AuxLines.vue';
 import HighlightBox from './HighlightBox.vue';
 import NodeRenderer from './NodeRenderer.vue';
 
-const props = defineProps<{ data: ElementANode[] }>();
+const props = defineProps<{ index: number; showHightlight: boolean }>();
 
 const commonStore = useCommonStore();
 const workspaceStore = useWorkspaceStore();
+const sidebarStore = useSidebarStore();
 
-const isShowBox = ref(false);
+const anodeList = ref<ElementANode[]>([]);
+
+const timer = ref();
+const isShowHightlight = ref(false);
 const containerRef = ref<HTMLElement>();
 const canvasRef = ref<HTMLCanvasElement>();
 
-useDrag(props.data, (action, info) => {
-  commonStore.setDragData(
-    Object.assign(commonStore.dragData, { action, ...info })
-  );
-  if (!isShowBox.value) {
-    isShowBox.value = action !== 'move';
+watch(
+  () => props.showHightlight,
+  newVal => {
+    isShowHightlight.value = newVal;
   }
-  if (action === 'resize' || action === 'end') {
-    const { x, y, el, width, height } = info;
-    workspaceStore.updateOneNode(el!.id, {
+);
+
+const init = () => {
+  const { anodes } = [...workspaceStore.openedFiles][props.index];
+  anodeList.value = anodes;
+  processElementsDrag(anodeList.value);
+};
+
+onMounted(init);
+watch(() => workspaceStore.openedFiles, init, { deep: true });
+
+const processElementsDrag = useDrag((action, info) => {
+  const merge = Object.assign(commonStore.dragData, { action, ...info });
+  commonStore.setDragData(merge);
+
+  const { x, y, el, width, height } = merge;
+
+  if (!isShowHightlight.value) {
+    isShowHightlight.value = action !== 'move';
+  }
+
+  workspaceStore.updateNode(
+    el!.id,
+    {
       x,
       y,
       attrs: {
+        'data-x': x,
+        'data-y': y,
+        class: { active: action === 'move' },
         style: {
           width: `${width}px`,
           height: `${height}px`,
           transform: `translate(${x}px, ${y}px)`,
         },
       },
-    });
-  }
+    },
+    false
+  );
 });
 
 const createGrids = (w = 0, h = 0) => {
@@ -85,9 +114,9 @@ const createGrids = (w = 0, h = 0) => {
 
 const onClick = ({ target }: MouseEvent) => {
   if (!Array.from((target as HTMLElement).classList).includes('draggable')) {
-    isShowBox.value = false;
+    isShowHightlight.value = false;
   } else {
-    isShowBox.value = true;
+    isShowHightlight.value = true;
   }
 };
 
@@ -99,10 +128,21 @@ const onScroll = () => {
 nextTick(() => {
   createGrids();
 });
+
 onMounted(() => {
   window.addEventListener('resize', () => createGrids());
 });
+
+watch(
+  () => sidebarStore.width,
+  () => {
+    if (timer.value) clearTimeout(timer.value);
+    timer.value = setTimeout(createGrids, 200);
+  }
+);
+
 onBeforeUnmount(() => {
+  clearTimeout(timer.value);
   window.removeEventListener('resize', () => createGrids());
 });
 </script>
