@@ -40,17 +40,19 @@
 
 <script setup lang="ts">
 import { DOWNLOAD_FILE_TYPE } from '@/share/enums';
+import { useNodeManagerStore } from '@/stores/nodeManagerStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { message, type CheckboxOptionType } from 'ant-design-vue';
 import { onBeforeMount, ref } from 'vue';
 
-const store = useWorkspaceStore();
+const workspaceStore = useWorkspaceStore();
+const nodeManagerStore = useNodeManagerStore();
 
 const checked = ref<string[]>([]);
 const options = ref<CheckboxOptionType[]>([]);
 
 onBeforeMount(() => {
-  options.value = store.treeData.map(({ name, key }) => ({
+  options.value = workspaceStore.workData.map(({ name, key }) => ({
     label: name,
     value: key,
   }));
@@ -67,7 +69,7 @@ const onDownload = (e: any) => {
     message.info('请选择选择要导出的项目');
     return;
   }
-  store.download(e.key, nodeKey, true);
+  nodeManagerStore.exportToFile(e.key, nodeKey, true);
 };
 </script>
 

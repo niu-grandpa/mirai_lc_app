@@ -11,7 +11,7 @@
     style="display: none"
     @change="onUploadAndAddTreeNode" />
 
-  <section class="empty" v-if="!store.treeData.length">
+  <section class="empty" v-if="!workspaceStore.workData.length">
     <a-button block :icon="h(UploadOutlined)" @click="fileInput?.click()">
       导入json
     </a-button>
@@ -31,14 +31,14 @@
       draggable
       block-node
       :height="maxHeight"
-      @drop="store.dragNode"
+      @drop="nodeManagerStore.dragNode"
       @rightClick="onRightClick"
-      :tree-data="store.treeData"
+      :tree-data="workspaceStore.workData"
       :field-names="{ title: 'name' }"
       @expand="autoExpandParent = false"
       v-model:expandedKeys="expandedKeys"
       :auto-expand-parent="autoExpandParent"
-      v-model:selectedKeys="store._selectedKey"
+      v-model:selectedKeys="nodeManagerStore._selectedKeys"
       :style="{ height: `${maxHeight}px`, overflow: 'auto' }">
       <template #title="{ name, key: treeKey }">
         <a-dropdown :trigger="['contextmenu']">
@@ -110,6 +110,7 @@ import {
   ANodeActionTitles,
   DOWNLOAD_FILE_TYPE,
 } from '@/share/enums';
+import { useNodeManagerStore } from '@/stores/nodeManagerStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import { Checkbox, message, Modal } from 'ant-design-vue';
@@ -123,7 +124,8 @@ import {
   watch,
 } from 'vue';
 
-const store = useWorkspaceStore();
+const workspaceStore = useWorkspaceStore();
+const nodeManagerStore = useNodeManagerStore();
 
 const searchValue = ref('');
 const currentNodeKey = ref('');
@@ -155,20 +157,20 @@ onBeforeUnmount(() => {
 
 onBeforeMount(() => {
   showDelPrompt.value = getLocalItem('showDelPrompt');
-  expandedKeys.value = store.expandedKeys;
+  expandedKeys.value = nodeManagerStore.expandedKeys;
 });
 
 watch(
   () => expandedKeys.value,
   newVal => {
     const val = newVal.filter(item => item?.endsWith(FolderKeySuffix));
-    store.updateExpandedKeys(val);
+    nodeManagerStore.updateExpandedKeys(val);
   }
 );
 
 const onSearch = (value: string) => {
-  const expanded = store.findKeysByName(value);
-  store.updateExpandedKeys(expanded);
+  const expanded = workspaceStore.findKeysByName(value);
+  nodeManagerStore.updateExpandedKeys(expanded);
   searchValue.value = value;
   autoExpandParent.value = true;
 };
@@ -179,7 +181,7 @@ const onUploadAndAddTreeNode = async () => {
   const fs = fileInput.value?.files;
   if (fs?.length) {
     try {
-      await store.uploadAndAddNodes(fs[0], currentNodeKey.value);
+      await nodeManagerStore.importWorkFile(fs[0], currentNodeKey.value);
     } catch (e: Error) {
       message.error(
         e.message ?? '无法识别文件内容，请确保数据格式符合既定标准'
@@ -227,7 +229,9 @@ const onCtxMenuClick = (
   menuKey: ANODE_ACTION_KEY,
   name: string
 ) => {
-  const keys = store.selectedKey.includes(key) ? store.selectedKey : [key];
+  const keys = nodeManagerStore.selectedKeys.includes(key)
+    ? nodeManagerStore.selectedKeys
+    : [key];
   const actions = {
     [ANODE_ACTION_KEY.CREATE_PROJECT]: openCreateModal,
     [ANODE_ACTION_KEY.CREATE_FOLDER]: openCreateModal,
@@ -239,7 +243,7 @@ const onCtxMenuClick = (
       fileInput.value?.click();
     },
     [ANODE_ACTION_KEY.DOWNLOAD]: () => {
-      store.download(DOWNLOAD_FILE_TYPE.VUE, key);
+      nodeManagerStore.exportToFile(DOWNLOAD_FILE_TYPE.VUE, key);
     },
     [ANODE_ACTION_KEY.RENAME]: () => (openRenameOrCreateModal.value = true),
     [ANODE_ACTION_KEY.DELETE]: () => onDeleteNode(keys),
@@ -273,7 +277,7 @@ const onRenameOrCreateNode = async () => {
   ].includes(menuKey);
   if (isCreate) {
     try {
-      await store.createAndInsertNode({
+      await workspaceStore.createAndInsertNode({
         name,
         // @ts-ignore
         type: menuKey,
@@ -286,7 +290,7 @@ const onRenameOrCreateNode = async () => {
     }
   } else {
     try {
-      store.updateOneNode(currentNodeKey.value, { name });
+      workspaceStore.updateNode(currentNodeKey.value, { name });
       message.success('重命名成功');
     } catch (error: Error) {
       message.error(error.message);
@@ -310,9 +314,9 @@ const setCloneNodeKeys = (type: 'copy' | 'cut', keys: string[]) => {
 };
 
 const pasteNode = async () => {
-  store.pasteNode(currentNodeKey.value, cloneNodeKeys.keys);
+  nodeManagerStore.pasteNode(currentNodeKey.value, cloneNodeKeys.keys);
   if (cloneNodeKeys.type === 'cut') {
-    store.removeNode(cloneNodeKeys.keys);
+    nodeManagerStore.removeNodes(cloneNodeKeys.keys);
   }
   message.success('粘贴成功');
 };
@@ -320,7 +324,7 @@ const pasteNode = async () => {
 const onDeleteNode = async (keys: string[]) => {
   const fn = () => {
     try {
-      store.removeNode(keys);
+      nodeManagerStore.removeNodes(keys);
     } catch (error: Error) {
       message.error(error.message);
     }

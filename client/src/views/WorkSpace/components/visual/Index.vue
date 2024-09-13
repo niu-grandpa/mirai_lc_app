@@ -1,5 +1,5 @@
 <template>
-  <section v-if="!store.openedNodes.size" class="logo-overview">
+  <section v-if="!workspaceStore.openedFiles.size" class="logo-overview">
     <figure class="img">
       <img width="100%" height="100%" :src="BlackLogo" />
       <h3 class="title">从右侧选择文件以开始您的创作</h3>
@@ -13,15 +13,17 @@
     :tab-bar-gutter="3"
     type="editable-card"
     v-model:active-key="activeKey"
-    v-show="store.openedNodes.size"
+    v-show="workspaceStore.openedFiles.size"
     :tab-bar-style="{ padding: '0 12px' }">
     <a-tab-pane
-      v-for="pane in store.openedNodes"
+      v-for="(pane, i) in workspaceStore.openedFiles"
       :key="pane.key"
-      :tab="pane.name"
-      style="padding: 0 12px">
+      :tab="pane.name">
       <a-dropdown :trigger="['contextmenu']" @contextmenu="onRightClick">
-        <Visualizer :id="pane.key" :data="pane.anodes" />
+        <Visualizer
+          :id="pane.key"
+          :index="i"
+          :show-hightlight="isShowHightlight" />
         <template #overlay>
           <a-menu @click="onMenuClick" style="width: 120px">
             <template v-for="item in menuItems" :key="item.key">
@@ -41,40 +43,44 @@
 
 <script setup lang="ts">
 import { FolderKeySuffix } from '@/core/tree-manager/share';
-import { ANODE_ACTION_KEY } from '@/share/enums';
+import { ANODE_ACTION_KEY, VISUAL_CLASS_NAME } from '@/share/enums';
+import { useNodeManagerStore } from '@/stores/nodeManagerStore';
+import { useVisualEditorStore } from '@/stores/visualEditorStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { MenuProps } from 'ant-design-vue';
 import BlackLogo from 'public/logo-black.svg';
 import { computed, ref, watch } from 'vue';
 import Visualizer from './Visualizer.vue';
 
-const store = useWorkspaceStore();
+const workspaceStore = useWorkspaceStore();
+const nodeManagerStore = useNodeManagerStore();
+const visualEditorStore = useVisualEditorStore();
 
-const activeKey = ref(store.selectedKey[store.selectedKey.length - 1]);
+const activeKey = ref(
+  nodeManagerStore.selectedKeys[nodeManagerStore.selectedKeys.length - 1]
+);
 const isShowOption = ref(true);
-const tempCopyKey = ref('');
-const copyKey = ref('');
+const copyNodeKey = ref('');
+const curNodeKey = ref('');
+const isShowHightlight = ref(true);
+
+let rightClickMouseEv: MouseEvent | null = null;
 
 const menuItems = computed(() => [
-  {
-    title: '剪切',
-    show: isShowOption.value,
-    key: ANODE_ACTION_KEY.CUT,
-  },
   {
     title: '复制',
     show: isShowOption.value,
     key: ANODE_ACTION_KEY.COPY,
   },
   {
-    title: '预览代码',
+    title: '源码预览',
     show: !isShowOption.value,
     key: ANODE_ACTION_KEY.VIEW_CODE,
   },
   {
     title: '粘贴',
-    show: !isShowOption.value,
-    disabled: !copyKey.value.length,
+    show: true,
+    disabled: !copyNodeKey.value.length,
     key: ANODE_ACTION_KEY.PASTE,
   },
   {
@@ -87,46 +93,64 @@ const menuItems = computed(() => [
 watch(
   () => activeKey.value,
   newVal => {
-    store.updateSelectedKey([newVal]);
+    nodeManagerStore.updateSelectedKeys([newVal]);
   }
 );
 
 watch(
-  () => store.selectedKey,
+  () => nodeManagerStore.selectedKeys,
   newVal => {
     const lastKey = newVal[newVal.length - 1];
     if (!lastKey?.endsWith(FolderKeySuffix)) {
       activeKey.value = lastKey;
-      store.updateSelectedKey(newVal);
-      store.updateOpenedFileANodes('add', lastKey);
+      nodeManagerStore.updateSelectedKeys(newVal);
+      workspaceStore.updateOpenedFilesByKeys('add', lastKey);
     }
   }
 );
 
 const onDeleteTab = (targetKey: string) => {
-  const arr = [...store.openedKeys];
-  store.updateOpenedFileANodes('delete', targetKey);
-  const curSelectedKey = store.selectedKey[store.selectedKey.length - 1];
+  const arr = [...workspaceStore.openedFileKeys];
+  workspaceStore.updateOpenedFilesByKeys('delete', targetKey);
+  const curSelectedKey =
+    nodeManagerStore.selectedKeys[nodeManagerStore.selectedKeys.length - 1];
   if (targetKey === curSelectedKey) {
     const curIdx = arr.indexOf(targetKey);
     const newSelectedKey = [arr[curIdx - 1] ?? arr[curIdx + 1]];
-    store.updateSelectedKey(newSelectedKey);
+    nodeManagerStore.updateSelectedKeys(newSelectedKey);
   } else {
-    store.updateSelectedKey(store.selectedKey.filter(k => k !== targetKey));
+    nodeManagerStore.updateSelectedKeys(
+      nodeManagerStore.selectedKeys.filter(k => k !== targetKey)
+    );
   }
 };
 
-const onRightClick = ({ target }: MouseEvent) => {
-  const _target = target as HTMLElement;
-  isShowOption.value = !_target.classList.contains('workspace-visual');
-  if (_target.id && _target.id.length == 9) tempCopyKey.value = _target.id;
+const onRightClick = (ev: MouseEvent) => {
+  rightClickMouseEv = ev;
+  const target = ev.target as HTMLElement;
+  if (!target.classList.contains(VISUAL_CLASS_NAME) && target.id?.length >= 9) {
+    curNodeKey.value = target.id;
+    isShowOption.value = true;
+  } else {
+    isShowOption.value = false;
+  }
 };
 
-const onMenuClick: MenuProps['onClick'] = ({ key }) => {
-  if (key === ANODE_ACTION_KEY.COPY || key === ANODE_ACTION_KEY.CUT) {
-    copyKey.value = tempCopyKey.value;
+const onMenuClick: MenuProps['onClick'] = async ({ key, domEvent }) => {
+  if (key === ANODE_ACTION_KEY.COPY) {
+    copyNodeKey.value = curNodeKey.value;
+    curNodeKey.value = '';
   } else if (key === ANODE_ACTION_KEY.PASTE) {
-    console.log(copyKey.value);
+    visualEditorStore.pasteNode(
+      rightClickMouseEv!,
+      curNodeKey.value,
+      copyNodeKey.value
+    );
+    rightClickMouseEv = null;
+  } else if (key === ANODE_ACTION_KEY.DELETE) {
+    workspaceStore.removeNode(curNodeKey.value);
+    isShowHightlight.value = false;
+    curNodeKey.value = '';
   } else if (key === ANODE_ACTION_KEY.VIEW_CODE) {
     //
   }
