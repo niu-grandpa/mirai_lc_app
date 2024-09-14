@@ -14,7 +14,7 @@
     type="editable-card"
     v-model:active-key="activeKey"
     v-show="workspaceStore.openedFiles.size"
-    :tab-bar-style="{ padding: '0 12px' }">
+    :tab-bar-style="{ marginBottom: '6px', padding: '0 12px' }">
     <a-tab-pane
       v-for="(pane, i) in workspaceStore.openedFiles"
       :key="pane.key"
