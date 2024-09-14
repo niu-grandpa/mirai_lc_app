@@ -150,7 +150,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .workspace-visual {
   position: relative;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 48px);
   background-color: #ffffff;
   overflow: hidden;
 
