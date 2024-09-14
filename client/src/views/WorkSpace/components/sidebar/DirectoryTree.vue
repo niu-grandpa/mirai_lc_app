@@ -40,6 +40,10 @@
       :auto-expand-parent="autoExpandParent"
       v-model:selectedKeys="nodeManagerStore._selectedKeys"
       :style="{ height: `${maxHeight}px`, overflow: 'auto' }">
+      <template #switcherIcon="{ switcherCls }">
+        <down-outlined :class="switcherCls" />
+      </template>
+
       <template #title="{ name, key: treeKey }">
         <a-dropdown :trigger="['contextmenu']">
           <span v-if="name.includes(searchValue)" :title="name">
