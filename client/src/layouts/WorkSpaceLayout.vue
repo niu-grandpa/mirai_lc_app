@@ -35,7 +35,6 @@ const handleSiderResize = () => {
       left: resizeBarRef.value!,
       right: false,
     },
-    invert: 'reposition',
     cursorChecker: () => 'col-resize',
     onmove: event => {
       let x = dataX.value;
