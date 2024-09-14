@@ -1,7 +1,7 @@
 import {
   CloudDownloadOutlined,
+  FolderOpenOutlined,
   HighlightOutlined,
-  LaptopOutlined,
   LayoutOutlined,
   SettingOutlined,
   UserOutlined,
@@ -38,9 +38,15 @@ interface PanelOptions {
 export const PANEL_OPTIONS: PanelOptions[] = [
   {
     title: '资源管理器',
-    icon: LaptopOutlined,
+    icon: FolderOpenOutlined,
     key: RIGHT_OPTIONS.RESOURCE,
     active: true,
+  },
+  {
+    title: '导出',
+    icon: CloudDownloadOutlined,
+    key: RIGHT_OPTIONS.EXPORT,
+    active: false,
   },
   {
     title: '组件面板',
@@ -52,12 +58,6 @@ export const PANEL_OPTIONS: PanelOptions[] = [
     title: '样式调节',
     icon: HighlightOutlined,
     key: RIGHT_OPTIONS.STYLE,
-    active: false,
-  },
-  {
-    title: '导出',
-    icon: CloudDownloadOutlined,
-    key: RIGHT_OPTIONS.EXPORT,
     active: false,
   },
   { title: '帐户', icon: UserOutlined, key: RIGHT_OPTIONS.USER, active: false },
