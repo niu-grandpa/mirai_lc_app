@@ -1,234 +1,124 @@
-<style>
-  .box {
-    width: 120px;
-    height: 60px;
-    border: 1px solid #333;
-    box-sizing: border-box;
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #29e;
-    font-size: 18px;
-    color: #fff;
-    user-select: none;
-    touch-action: none;
-    &.active {
-      opacity: 0.75;
-    }
-  }
-
-  .parent {
-    width: 500px;
-    height: 360px;
-    overflow: auto;
-    flex: 1;
-    position: relative;
-    outline: 2px solid #ccc;
-    background-color: #fff;
-  }
-
-  .drop-active {
-    border: dashed 2px orange;
-  }
-
-  .draggable {
-    touch-action: none;
-    user-select: none;
-  }
-
-  .auxline {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: translate(0, 0);
-    border: dashed 1px #29e;
-
-    &.x {
-      width: 100%;
-    }
-    &.y {
-      height: 100%;
-    }
-  }
-</style>
-
-<body>
-  <div class="parent" data-key="aaa">
-    <div class="auxline x top"></div>
-    <div class="auxline x bottom"></div>
-    <div class="auxline y left"></div>
-    <div class="auxline y right"></div>
-
-    <div class="box" id="box1" data-parent-key="aaa">Box1</div>
-    <div
-      class="box"
-      id="box2"
-      style="transform: translate(136px, 64px)"
-      data-parent-key="aaa"
-      data-x="136"
-      data-y="64">
-      Box2
-    </div>
-    <div
-      class="box"
-      id="box3"
-      style="transform: translate(244px, 160px)"
-      data-parent-key="aaa"
-      data-x="244"
-      data-y="160">
-      Box3
-    </div>
-  </div>
-
-  <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
-  <script>
-    const range = 12;
-    const lineThickness = 1;
-
-    const auxiliaryLines = {
-      horizontalTop: document.querySelector('.auxline.x.top'),
-      horizontalBottom: document.querySelector('.auxline.x.bottom'),
-      verticalLeft: document.querySelector('.auxline.y.left'),
-      verticalRight: document.querySelector('.auxline.y.right'),
-    };
-
-    // 显示辅助线的函数
-    const showAuxiliaryLines = ({ target }, cursorX, cursorY) => {
-      const { offsetWidth: targetWidth, offsetHeight: targetHeight } = target;
-
-      // 计算水平辅助线的位置
-      const topY = cursorY - range;
-      const bottomY = cursorY + targetHeight + range;
-
-      // 显示或隐藏水平辅助线
-      toggleAuxiliaryLine('horizontalTop', topY, `[data-y="${topY}"]`, target);
-      toggleAuxiliaryLine(
-        'horizontalBottom',
-        bottomY,
-        `[data-y="${bottomY}"]`,
-        target
-      );
-
-      // 计算垂直辅助线的位置
-      const leftX = cursorX - targetWidth - range;
-      const rightX = cursorX + targetWidth + range;
-
-      // 显示或隐藏垂直辅助线
-      toggleAuxiliaryLine(
-        'verticalLeft',
-        leftX + targetWidth,
-        `[data-x="${leftX}"]`,
-        target
-      );
-      toggleAuxiliaryLine(
-        'verticalRight',
-        rightX,
-        `[data-x="${rightX}"]`,
-        target
-      );
-    };
-
-    // 显示或隐藏辅助线的通用函数
-    const toggleAuxiliaryLine = (lineKey, position, selector, target) => {
-      const elementNearPosition = document.querySelector(selector);
-
-      if (elementNearPosition && !elementNearPosition.contains(target)) {
-        const transformProperty = lineKey.startsWith('horizontal')
-          ? 'translateY'
-          : 'translateX';
-        auxiliaryLines[lineKey].style.transform = `${transformProperty}(${
-          position - lineThickness
-        }px)`;
-        auxiliaryLines[lineKey].style.display = 'block';
-      } else {
-        auxiliaryLines[lineKey].style.display = 'none';
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>辅助线对齐示例</title>
+    <style>
+      #draggable {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        background-color: lightblue;
+        cursor: move;
       }
-    };
+      .target {
+        position: absolute;
+        width: 120px;
+        height: 80px;
+        background-color: lightgreen;
+      }
+      .guide {
+        position: absolute;
+        background-color: red;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="draggable">拖动我</div>
+    <div class="target" style="left: 300px; top: 150px"></div>
+    <div class="target" style="left: 500px; top: 300px"></div>
 
-    const position2 = { x: 0, y: 0 };
-    const draggable = interact('#box1');
-    draggable
-      .draggable({
-        autoScroll: {
-          container: document.querySelector('.parent'),
-          margin: 50,
-          distance: 5,
-          interval: 10,
-          speed: 300,
-        },
-        modifiers: [
-          interact.modifiers.snap({
-            targets: [interact.snappers.grid({ x: range, y: range })],
-            range,
-            relativePoints: [{ x: 0, y: 0 }],
-          }),
-          interact.modifiers.restrictRect({
-            restriction: null,
-            endOnly: true,
-          }),
-        ],
-        onstart(event) {
-          event.target.classList.add('active');
-          document
-            .querySelector('[data-key="aaa"]')
-            .classList.add('drop-active');
-        },
-        onmove(event) {
-          position2.x += event.dx;
-          position2.y += event.dy;
-          event.target.style.transform = `translate(${position2.x}px, ${position2.y}px)`;
-          showAuxiliaryLines(event, position2.x, position2.y);
-        },
-        onend(event) {
-          event.target.dataset.x = position2.x;
-          event.target.dataset.y = position2.y;
-          event.target.classList.remove('active');
+    <script>
+      let isDragging = false;
+      let draggedElement = document.getElementById('draggable');
+      let alignmentThreshold = 10;
+      let verticalGuide = null;
+      let horizontalGuide = null;
 
-          auxiliaryLines.horizontalTop.style.display = 'none';
-          auxiliaryLines.horizontalBottom.style.display = 'none';
-          auxiliaryLines.verticalLeft.style.display = 'none';
-          auxiliaryLines.verticalRight.style.display = 'none';
+      const targetElements = document.querySelectorAll('.target');
 
-          document
-            .querySelector('[data-key="aaa"]')
-            .classList.remove('drop-active');
-        },
-        cursorChecker(action, interactable, element, interacting) {
-          return interacting ? 'grabbing' : 'grab';
-        },
-      })
-      .resizable({
-        modifiers: [
-          interact.modifiers.restrict({
-            restriction: null,
-            endOnly: true,
-          }),
-        ],
-        autoScroll: true,
-        invert: 'reposition',
-        edges: { top: true, left: true, bottom: true, right: true },
-        onmove(event) {
-          let { x, y } = event.target.dataset;
-          event.target.style.background = 'red';
-          x = (position2.x || Math.floor(x) || 0) + event.deltaRect.left;
-          y = (position2.y || Math.floor(y) || 0) + event.deltaRect.top;
-
-          Object.assign(event.target.style, {
-            width: `${event.rect.width}px`,
-            height: `${event.rect.height}px`,
-            transform: `translate(${x}px, ${y}px)`,
-          });
-
-          position2.x = x;
-          position2.y = y;
-
-          Object.assign(event.target.dataset, { x, y });
-        },
-        onend(event) {
-          event.target.style.background = '#29e';
-        },
+      draggedElement.addEventListener('mousedown', e => {
+        isDragging = true;
+        offsetX = e.clientX - draggedElement.offsetLeft;
+        offsetY = e.clientY - draggedElement.offsetTop;
       });
-  </script>
-</body>
+
+      document.addEventListener('mousemove', e => {
+        if (isDragging) {
+          let dragX = e.clientX - offsetX;
+          let dragY = e.clientY - offsetY;
+          draggedElement.style.left = dragX + 'px';
+          draggedElement.style.top = dragY + 'px';
+          checkAlignment(dragX, dragY);
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+        removeGuides();
+      });
+
+      function checkAlignment(dragX, dragY) {
+        removeGuides();
+        targetElements.forEach(target => {
+          const targetRect = target.getBoundingClientRect();
+          const draggedRect = draggedElement.getBoundingClientRect();
+
+          // 水平对齐
+          if (Math.abs(dragX - targetRect.left) < alignmentThreshold) {
+            showVerticalGuide(targetRect.left);
+          }
+          if (
+            Math.abs(dragX + draggedRect.width - targetRect.right) <
+            alignmentThreshold
+          ) {
+            showVerticalGuide(targetRect.right);
+          }
+
+          // 垂直对齐
+          if (Math.abs(dragY - targetRect.top) < alignmentThreshold) {
+            showHorizontalGuide(targetRect.top);
+          }
+          if (
+            Math.abs(dragY + draggedRect.height - targetRect.bottom) <
+            alignmentThreshold
+          ) {
+            showHorizontalGuide(targetRect.bottom);
+          }
+        });
+      }
+
+      function showVerticalGuide(x) {
+        if (!verticalGuide) {
+          verticalGuide = document.createElement('div');
+          verticalGuide.classList.add('guide');
+          verticalGuide.style.width = '1px';
+          verticalGuide.style.top = '0';
+          verticalGuide.style.bottom = '0';
+          document.body.appendChild(verticalGuide);
+        }
+        verticalGuide.style.left = x + 'px';
+        verticalGuide.style.display = 'block';
+      }
+
+      function showHorizontalGuide(y) {
+        if (!horizontalGuide) {
+          horizontalGuide = document.createElement('div');
+          horizontalGuide.classList.add('guide');
+          horizontalGuide.style.height = '1px';
+          horizontalGuide.style.left = '0';
+          horizontalGuide.style.right = '0';
+          document.body.appendChild(horizontalGuide);
+        }
+        horizontalGuide.style.top = y + 'px';
+        horizontalGuide.style.display = 'block';
+      }
+
+      function removeGuides() {
+        if (verticalGuide) verticalGuide.style.display = 'none';
+        if (horizontalGuide) horizontalGuide.style.display = 'none';
+      }
+    </script>
+  </body>
+</html>
