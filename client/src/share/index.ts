@@ -64,3 +64,8 @@ export function deepClone<T>(o: T): T {
 
   return result;
 }
+
+export function extractNumberFromString(input: string): number {
+  const result = input.match(/-?\d+(\.\d+)?/);
+  return result ? parseFloat(result[0]) : 0;
+}
