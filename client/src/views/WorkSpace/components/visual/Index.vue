@@ -7,6 +7,7 @@
   </section>
 
   <a-tabs
+    v-else
     hide-add
     size="small"
     @edit="onDeleteTab"
