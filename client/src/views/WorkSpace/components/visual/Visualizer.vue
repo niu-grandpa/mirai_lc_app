@@ -5,8 +5,8 @@
     @click.stop="onClick"
     @scroll="onScroll">
     <canvas ref="canvasRef" />
-    <AuxLines />
-    <HighlightBox v-show="isShowHightlight" />
+    <HighlightBox v-show="isShow" />
+    <AuxLines :anodes="anodeList" />
     <NodeRenderer v-for="anode in anodeList" :key="anode.key" :node="anode" />
   </section>
 </template>
@@ -33,14 +33,14 @@ const sidebarStore = useSidebarStore();
 const anodeList = ref<ElementANode[]>([]);
 
 const timer = ref();
-const isShowHightlight = ref(false);
+const isShow = ref(false);
 const containerRef = ref<HTMLElement>();
 const canvasRef = ref<HTMLCanvasElement>();
 
 watch(
   () => props.showHightlight,
   newVal => {
-    isShowHightlight.value = newVal;
+    isShow.value = newVal;
   }
 );
 
@@ -54,13 +54,16 @@ onMounted(init);
 watch(() => workspaceStore.openedFiles, init, { deep: true });
 
 const processElementsDrag = useDrag((action, info) => {
-  const merge = Object.assign(commonStore.dragData, { action, ...info });
+  const merge = Object.assign(commonStore.dragData ?? {}, { action, ...info });
   commonStore.setDragData(merge);
 
   const { x, y, el, width, height } = merge;
 
-  if (!isShowHightlight.value) {
-    isShowHightlight.value = action !== 'move';
+  if (!isShow.value) {
+    isShow.value = action !== 'move';
+  }
+  if (action === 'end') {
+    commonStore._dragData.el = null;
   }
 
   workspaceStore.updateNode(
@@ -114,9 +117,9 @@ const createGrids = (w = 0, h = 0) => {
 
 const onClick = ({ target }: MouseEvent) => {
   if (!Array.from((target as HTMLElement).classList).includes('draggable')) {
-    isShowHightlight.value = false;
+    isShow.value = false;
   } else {
-    isShowHightlight.value = true;
+    isShow.value = true;
   }
 };
 
