@@ -1,110 +1,94 @@
 <template>
-  <div
-    v-show="lineVisibility.showTopY"
-    class="auxline x top"
-    :style="horizontalTop" />
-  <div
-    v-show="lineVisibility.showBottomY"
-    class="auxline x bottom"
-    :style="horizontalBottom" />
-  <div
-    v-show="lineVisibility.showLeftX"
-    class="auxline y left"
-    :style="verticalLeft" />
-  <div
-    v-show="lineVisibility.showRightX"
-    class="auxline y right"
-    :style="verticalRight" />
+  <div v-show="showHorizontalLine" class="auxline x" :style="style1" />
+  <div v-show="showVerticalLine" class="auxline y" :style="style2" />
 </template>
 
 <script setup lang="ts">
 import { DRAG_RANGE } from '@/hooks/useDrag';
+import { extractNumberFromString } from '@/share';
+import { type ElementANode } from '@/share/abstractNode';
 import { useCommonStore } from '@/stores/commonStore';
-import { computed, reactive, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-const LINE_THICKNESS = 2;
+const props = defineProps<{
+  anodes: ElementANode[];
+}>();
 
 const store = useCommonStore();
 
-const positions = reactive({
-  topY: 0,
-  bottomY: 0,
-  leftX: 0,
-  rightX: 0,
-});
+const verticalPosition = ref(0);
+const horizontalPosition = ref(0);
+const showVerticalLine = ref(false);
+const showHorizontalLine = ref(false);
 
-const lineVisibility = reactive({
-  showTopY: false, // 显示x轴方向的上横线
-  showBottomY: false, // x轴方向的下横线
-  showLeftX: false, // y轴方向的左竖线
-  showRightX: false, // y轴方向的右竖线
-});
-
-const horizontalTop = computed(() => ({
-  transform: `translateY(${positions.topY}px)`,
+const style1 = computed(() => ({
+  transform: `translateY(${horizontalPosition.value}px)`,
 }));
-const horizontalBottom = computed(() => ({
-  transform: `translateY(${positions.bottomY}px)`,
-}));
-const verticalLeft = computed(() => ({
-  transform: `translateX(${positions.leftX}px)`,
-}));
-const verticalRight = computed(() => ({
-  transform: `translateX(${positions.rightX}px)`,
+const style2 = computed(() => ({
+  transform: `translateX(${verticalPosition.value}px)`,
 }));
 
-const showAuxiliaryLines = () => {
-  const { x, y, width, height, el } = store.dragData;
-  const newPositions = {
-    topY: y - DRAG_RANGE,
-    bottomY: y + height + DRAG_RANGE,
-    leftX: x - width - DRAG_RANGE,
-    rightX: x + width + DRAG_RANGE,
-  };
+const resetAlignment = () => {
+  verticalPosition.value = 0;
+  horizontalPosition.value = 0;
+  showVerticalLine.value = false;
+  showHorizontalLine.value = false;
+};
 
-  Object.entries(newPositions).forEach(([key, position]) => {
-    const selector = `[data-${key.endsWith('Y') ? 'y' : 'x'}="${position}"]`;
-    if (key === 'leftX') position += width + 2;
-    toggleAuxiliaryLine(key, position, selector, el);
+const alignmentThreshold = DRAG_RANGE * 2;
+
+function checkIfWithinThreshold(current: number, target: number) {
+  return Math.abs(current - target) < alignmentThreshold;
+}
+
+const updateAlignment = () => {
+  const { x: curX, y: curY, el, width: curW, height: curH } = store.dragData;
+
+  if (!el) {
+    resetAlignment();
+    return;
+  }
+
+  props.anodes.some(other => {
+    if (el.id == other.key) return false;
+
+    const {
+      x: targetX,
+      y: targetY,
+      attrs: {
+        style: { width: targetW, height: targetH },
+      },
+    } = other;
+    const targetRectRight = targetX + extractNumberFromString(targetW);
+    const targetRectBottom = targetY + extractNumberFromString(targetH);
+
+    // 水平对齐
+    if (
+      checkIfWithinThreshold(curY, targetY) ||
+      checkIfWithinThreshold(curY + curH, targetRectBottom)
+    ) {
+      horizontalPosition.value = targetY;
+      showHorizontalLine.value = true;
+    } else {
+      showHorizontalLine.value = false;
+    }
+
+    // 垂直对齐
+    if (
+      checkIfWithinThreshold(curX, targetX) ||
+      checkIfWithinThreshold(curX + curW, targetRectRight)
+    ) {
+      verticalPosition.value = targetX;
+      showVerticalLine.value = true;
+    } else {
+      showVerticalLine.value = false;
+    }
+
+    return showVerticalLine.value || showHorizontalLine.value;
   });
 };
 
-const toggleAuxiliaryLine = (
-  lineKey: string,
-  position: number,
-  selector: string,
-  target: HTMLElement | null
-) => {
-  const elementNearPosition = document.querySelector(selector);
-  const visibleKey = `show${
-    lineKey.charAt(0).toUpperCase() + lineKey.slice(1)
-  }`;
-
-  if (elementNearPosition && !elementNearPosition.contains(target)) {
-    // @ts-ignore
-    positions[lineKey] = position - LINE_THICKNESS;
-    // @ts-ignore
-    lineVisibility[visibleKey] = true;
-  } else {
-    // @ts-ignore
-    lineVisibility[visibleKey] = false;
-  }
-};
-
-watch(
-  () => store.dragData,
-  ({ action }) => {
-    if (action === 'move') {
-      showAuxiliaryLines();
-    } else if (action === 'end') {
-      lineVisibility.showTopY = false;
-      lineVisibility.showBottomY = false;
-      lineVisibility.showLeftX = false;
-      lineVisibility.showRightX = false;
-    }
-  },
-  { deep: true }
-);
+watch(() => store.dragData, updateAlignment, { deep: true });
 </script>
 
 <style scoped>
@@ -113,7 +97,7 @@ watch(
   top: 0;
   left: 0;
   transform: translate(0, 0);
-  border: dashed 1px orange;
+  border: dashed 1px #b4b4b4;
   &.x {
     width: 100%;
   }
