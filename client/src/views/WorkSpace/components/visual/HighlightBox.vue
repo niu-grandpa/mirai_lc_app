@@ -18,11 +18,11 @@ import { computed } from 'vue';
 const store = useCommonStore();
 
 const style = computed(() => ({
-  width: `${store.dragData.action !== 'move' && store.dragData.width}px`,
-  height: `${store.dragData.action !== 'move' && store.dragData.height}px`,
+  width: `${store.dragData?.width}px`,
+  height: `${store.dragData?.height}px`,
   transform: `translate(${
-    store.dragData.action !== 'move' && store.dragData.x
-  }px, ${store.dragData.y}px)`,
+    store.dragData?.action !== 'move' && store.dragData?.x
+  }px, ${store.dragData?.y}px)`,
 }));
 </script>
 
