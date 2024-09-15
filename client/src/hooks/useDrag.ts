@@ -15,7 +15,7 @@ export type UseDragAction = 'end' | 'move' | 'tap' | 'resize';
 
 type Callback = (action: UseDragAction, info: UseDragTargetInfo) => void;
 
-export const DRAG_RANGE = 10;
+export const DRAG_RANGE = 12;
 
 export function useDrag(callback: Callback) {
   const setupDraggable = (
