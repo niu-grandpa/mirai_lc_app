@@ -10,14 +10,25 @@
 </template>
 
 <script setup lang="ts">
+import { SIDEBAR_OPTIONS } from '@/config/sidebar';
 import { useSidebarStore } from '@/stores/sidebarStore';
-import { COMPONENT_MAP, RIGHT_OPTIONS } from './enum';
+import CompPanel from './Component/Index.vue';
+import DirectoryTree from './DirectoryTree.vue';
+import Export from './Export.vue';
+import StyleAdjustment from './StyleAdjustment/Index.vue';
 
 defineProps<{
-  activeKey: RIGHT_OPTIONS;
+  activeKey: SIDEBAR_OPTIONS;
 }>();
 
 const store = useSidebarStore();
+
+const COMPONENT_MAP = {
+  [SIDEBAR_OPTIONS.RESOURCE]: DirectoryTree,
+  [SIDEBAR_OPTIONS.COMPONENT]: CompPanel,
+  [SIDEBAR_OPTIONS.STYLE]: StyleAdjustment,
+  [SIDEBAR_OPTIONS.EXPORT]: Export,
+};
 </script>
 
 <style scoped>

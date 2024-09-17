@@ -6,12 +6,12 @@
 </template>
 
 <script setup lang="ts">
+import { SIDEBAR_OPTIONS } from '@/config/sidebar';
 import { ref } from 'vue';
-import LeftPanel from './LeftPanel.vue';
+import LeftPanel from './LeftPanel/Index.vue';
 import RightOptions from './RightOptions.vue';
-import { RIGHT_OPTIONS } from './enum';
 
-const activeKey = ref<RIGHT_OPTIONS>(RIGHT_OPTIONS.RESOURCE);
+const activeKey = ref<SIDEBAR_OPTIONS>(SIDEBAR_OPTIONS.RESOURCE);
 </script>
 
 <style>
