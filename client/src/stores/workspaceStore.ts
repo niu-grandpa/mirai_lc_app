@@ -1,3 +1,4 @@
+import commonConfig from '@/config/common';
 import { type CreateANodeOptions } from '@/core/tree-manager/handler';
 import { useTreeManager } from '@/hooks';
 import { getLocalItem, setLocalItem } from '@/share';
@@ -7,7 +8,6 @@ import {
   type FolderANode,
   type TreeDataCommonType,
 } from '@/share/abstractNode';
-import { LOCAL_ITEM_KEY } from '@/share/enums';
 import { defineStore } from 'pinia';
 import { useCommonStore } from './commonStore';
 
@@ -18,6 +18,8 @@ export interface WorkspaceState {
 }
 
 const treeManager = useTreeManager();
+
+const { storageKeys } = commonConfig;
 
 export const useWorkspaceStore = defineStore('workspace', {
   state: (): WorkspaceState => ({
@@ -35,7 +37,7 @@ export const useWorkspaceStore = defineStore('workspace', {
 
   actions: {
     getLocalWorkData() {
-      const data = getLocalItem<TreeDataCommonType[]>(LOCAL_ITEM_KEY.FILE_DATA);
+      const data = getLocalItem<TreeDataCommonType[]>(storageKeys.FILE_DATA);
       this._workData = treeManager.setData(data).sortNodes();
       treeManager.freed();
     },
@@ -46,7 +48,7 @@ export const useWorkspaceStore = defineStore('workspace', {
         [sort ? 'sortNodes' : 'getData']();
       treeManager.freed();
       this._workData = newData;
-      setLocalItem(LOCAL_ITEM_KEY.FILE_DATA, newData);
+      setLocalItem(storageKeys.FILE_DATA, newData);
     },
 
     findOneNode(key: string) {
@@ -76,12 +78,12 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
 
     initOpenedFileKeys() {
-      this._openedFileKeys = new Set(getLocalItem(LOCAL_ITEM_KEY.OPENED_KEYS));
+      this._openedFileKeys = new Set(getLocalItem(storageKeys.OPENED_KEYS));
       this.setOpenedFileKeys();
     },
 
     setOpenedFileKeys() {
-      setLocalItem(LOCAL_ITEM_KEY.OPENED_KEYS, [...this.openedFileKeys]);
+      setLocalItem(storageKeys.OPENED_KEYS, [...this.openedFileKeys]);
     },
 
     getOpenedFiles(): Set<FileANode> {

@@ -1,8 +1,9 @@
 import { downloadFile, downloadProject } from '@/api/download';
 import { readWorkFile } from '@/api/upload';
+import commonConfig from '@/config/common';
 import { useTreeManager } from '@/hooks';
 import { getLocalItem, setLocalItem } from '@/share';
-import { DOWNLOAD_FILE_TYPE, LOCAL_ITEM_KEY } from '@/share/enums';
+import { DOWNLOAD_FILE_TYPE } from '@/share/enums';
 import { message } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 import { useCommonStore } from './commonStore';
@@ -14,6 +15,8 @@ export interface NodeManagerStore {
 }
 
 const treeManager = useTreeManager();
+
+const { storageKeys } = commonConfig;
 
 export const useNodeManagerStore = defineStore('nodeManager', {
   state: (): NodeManagerStore => ({
@@ -32,17 +35,17 @@ export const useNodeManagerStore = defineStore('nodeManager', {
     updateSelectedKeys(value?: string[]) {
       const keys =
         value ||
-        getLocalItem<string[]>(LOCAL_ITEM_KEY.SELECTED_KEYS) ||
+        getLocalItem<string[]>(storageKeys.SELECTED_KEYS) ||
         [...this.workspaceStore.openedFileKeys][0] ||
         [];
       this._selectedKeys = keys;
-      setLocalItem(LOCAL_ITEM_KEY.SELECTED_KEYS, keys);
+      setLocalItem(storageKeys.SELECTED_KEYS, keys);
     },
 
     updateExpandedKeys(value?: string[]) {
-      const _value = value || getLocalItem(LOCAL_ITEM_KEY.EXPANED_KEYS) || [];
+      const _value = value || getLocalItem(storageKeys.EXPANED_KEYS) || [];
       this._expandedKeys = _value;
-      setLocalItem(LOCAL_ITEM_KEY.EXPANED_KEYS, _value);
+      setLocalItem(storageKeys.EXPANED_KEYS, _value);
     },
 
     removeNodes(keys: string[]) {
