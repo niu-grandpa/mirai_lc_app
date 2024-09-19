@@ -2,7 +2,7 @@
   <section class="right">
     <div class="top">
       <div
-        v-for="item in rightOptions.slice(0, -2)"
+        v-for="item in options.slice(0, -2)"
         :class="['icon-box', { active: item.active }]"
         :title="item.title"
         :key="item.key"
@@ -12,7 +12,7 @@
     </div>
     <div class="bottom">
       <div
-        v-for="item in rightOptions.slice(-2)"
+        v-for="item in options.slice(-2)"
         :class="['icon-box', { active: item.active }]"
         :title="item.title"
         :key="item.key"
@@ -24,17 +24,17 @@
 </template>
 
 <script setup lang="ts">
+import sidebarConfig, { SIDEBAR_OPTIONS } from '@/config/sidebar';
 import { ref } from 'vue';
-import { PANEL_OPTIONS, RIGHT_OPTIONS } from './enum';
 
 const emits = defineEmits<{
-  (e: 'toogle', key: RIGHT_OPTIONS): void;
+  (e: 'toogle', key: SIDEBAR_OPTIONS): void;
 }>();
 
-const rightOptions = ref(PANEL_OPTIONS);
+const options = ref(sidebarConfig.options);
 
-const handleToogle = (key: RIGHT_OPTIONS) => {
-  rightOptions.value.forEach(item => {
+const handleToogle = (key: SIDEBAR_OPTIONS) => {
+  options.value.forEach(item => {
     item.active = item.key === key;
   });
   emits('toogle', key);
