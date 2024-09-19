@@ -1,8 +1,5 @@
 <template>
-  <a-config-provider
-    :theme="{
-      algorithm: theme.darkAlgorithm,
-    }">
+  <a-config-provider :theme="{ algorithm }">
     <a-spin
       :delay="200"
       tip="Loading..."
@@ -14,15 +11,20 @@
 </template>
 
 <script setup lang="ts">
+import commonConfig from '@/config/common';
 import { useCommonStore } from '@/stores/commonStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { theme } from 'ant-design-vue';
-import { onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useNodeManagerStore } from './stores/nodeManagerStore';
 
 const commonStore = useCommonStore();
 const workspaceStore = useWorkspaceStore();
 const nodeManagerStore = useNodeManagerStore();
+
+const algorithm = computed(() =>
+  commonStore.theme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
+);
 
 onBeforeMount(() => {
   workspaceStore.getLocalWorkData();
@@ -39,12 +41,10 @@ onBeforeMount(() => {
 const timer = ref();
 
 onMounted(() => {
-  const AUTO_SAVE_DELAY = 4000;
-
   if (!timer.value) {
     timer.value = setInterval(() => {
       workspaceStore.updateWorkData(workspaceStore.workData);
-    }, AUTO_SAVE_DELAY);
+    }, commonConfig.autoSaveInterval);
   }
 
   window.addEventListener('beforeunload', e => {
