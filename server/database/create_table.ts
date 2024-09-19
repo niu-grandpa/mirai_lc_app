@@ -3,24 +3,21 @@ import { readFileSync } from 'fs';
 import path from 'path';
 
 export default function createTable() {
-  const createUsersTableQuery = readFileSync(
-    path.join(__dirname, './sql/create_user_table.sql'),
-    'utf-8'
-  );
-  const createDownloadTableQuery = readFileSync(
-    path.join(__dirname, './sql/create_download_table.sql'),
-    'utf-8'
-  );
+  const readSqlFile = (file: string): string => {
+    return readFileSync(
+      path.join(__dirname, `./sql/create_${file}_table.sql`),
+      'utf-8'
+    );
+  };
 
-  const promises = [
-    useDB(createUsersTableQuery),
-    useDB(createDownloadTableQuery),
-  ];
+  const promises = [useDB(readSqlFile('user')), useDB(readSqlFile('download'))];
 
-  return new Promise((res, rej) => {
-    const arr = Promise.race(promises);
-    arr.then(res).catch(e => {
-      return rej(e);
-    });
+  return new Promise(async (res, rej) => {
+    try {
+      const values = await Promise.race(promises);
+      res(values);
+    } catch (error) {
+      return rej(error);
+    }
   });
 }
