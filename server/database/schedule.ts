@@ -10,7 +10,7 @@ const MIDNIGHT = '0 0 * * *';
 cron.schedule(MIDNIGHT, async () => {
   try {
     const res = await useDB<DownloadModel>(
-      'SELECT FROM download WHERE created_at < NOW() - INTERVAL 1 DAY'
+      'SELECT * FROM download WHERE created_at < NOW() - INTERVAL 1 DAY'
     );
 
     res.forEach(({ link }) => {
