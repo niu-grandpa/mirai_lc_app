@@ -10,7 +10,11 @@ export default function createTable() {
     );
   };
 
-  const promises = [useDB(readSqlFile('user')), useDB(readSqlFile('download'))];
+  const promises = [
+    useDB(readSqlFile('user')),
+    useDB(readSqlFile('download')),
+    useDB(readSqlFile('work_data')),
+  ];
 
   return new Promise(async (res, rej) => {
     try {
