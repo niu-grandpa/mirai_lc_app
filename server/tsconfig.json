@@ -68,7 +68,8 @@
     "paths": {
       "@*": ["src/*"]
     },
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "resolveJsonModule": true
   },
   "include": [
     "database/**/*.ts",
