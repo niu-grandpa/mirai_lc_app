@@ -1,0 +1,86 @@
+{
+  "key": "zdkoDWdk_d1wea;fld",
+  "name": "demo",
+  "isRoot": true,
+  "isLeaf": false,
+  "isFolder": true,
+  "timestamp": 1723188651021,
+  "children": [
+    {
+      "key": "zYYfHhDg;fld",
+      "name": "src",
+      "isLeaf": false,
+      "isFolder": true,
+      "children": [
+        {
+          "key": "awdwad;fld",
+          "name": "view",
+          "isLeaf": false,
+          "isFolder": true,
+          "children": [
+            {
+              "isLeaf": true,
+              "isFile": true,
+              "key": "zV3w9KhJM",
+              "name": "Home",
+              "anodes": [
+                {
+                  "isLeaf": true,
+                  "key": "zFy_v0ROE",
+                  "name": "div",
+                  "isComp": false,
+                  "x": 10,
+                  "y": 20,
+                  "children": [],
+                  "textContent": "Example content",
+                  "attrs": {
+                    "class": {
+                      "aadas": true
+                    },
+                    "style": {
+                      "width": "120px",
+                      "height": "60px",
+                      "position": "absolute",
+                      "color": "#fff",
+                      "fontSize": "16px",
+                      "backgroundColor": "#29e"
+                    }
+                  },
+                  "props": {},
+                  "directives": {},
+                  "on": {}
+                },
+                {
+                  "isLeaf": true,
+                  "key": "zm_op2jmq",
+                  "name": "div",
+                  "isComp": false,
+                  "x": 0,
+                  "y": 0,
+                  "children": [],
+                  "textContent": "Example content",
+                  "attrs": {
+                    "class": {
+                      "aadas": true
+                    },
+                    "style": {
+                      "width": "120px",
+                      "height": "60px",
+                      "position": "absolute",
+                      "color": "#fff",
+                      "fontSize": "16px",
+                      "backgroundColor": "#29e"
+                    }
+                  },
+                  "props": {},
+                  "directives": {},
+                  "on": {}
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
