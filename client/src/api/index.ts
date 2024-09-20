@@ -24,6 +24,13 @@ const createRequest = () => {
       if (process.env.NODE_ENV === 'development') {
         console.log('response: ', res.data);
       }
+      if (res.status !== 200) {
+        if (typeof res.data === 'string') {
+          message.error(res.data);
+        } else {
+          console.log('响应错误: ', res.data);
+        }
+      }
       return res;
     },
     err => {
