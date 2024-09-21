@@ -29,9 +29,6 @@ describe('work-data接口测试', () => {
       'http://localhost:8000/api/v1/work-data/all',
       {
         headers: { Authorization: token },
-        params: {
-          rootKey: mockData.key,
-        },
       }
     );
 
