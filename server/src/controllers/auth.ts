@@ -19,14 +19,17 @@ export const authenticateUser = async <T>(
         .json({ data: '请先登录' });
     }
 
-    const [user] = await useDB('SELECT * FROM users WHERE token=(?)', [
-      authorization,
-    ]);
+    const [rows] = await useDB(
+      'SELECT COUNT(*) as count FROM users WHERE token=(?)',
+      [authorization]
+    );
+
+    // @ts-ignore
     //! 运行测试时需要注释以下判断逻辑
-    if (!user) {
+    if (rows[0].count === 0) {
       return res
         .status(HttpStatusCodes.BAD_REQUEST)
-        .json({ data: '用户不存在' });
+        .json({ data: '权限校验失败' });
     }
 
     next();
