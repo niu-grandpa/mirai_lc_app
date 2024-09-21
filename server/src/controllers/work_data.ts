@@ -4,11 +4,11 @@ import HttpStatusCodes from 'constants/http_status_codes';
 import { useDB } from 'database';
 
 export class WorkDataController {
-  getAll = async (req: IReq<{ rootKey: string }>, res: IRes): Promise<IRes> => {
+  getAll = async (req: IReq, res: IRes): Promise<IRes> => {
     try {
       const data = await useDB<WorkDataModel>(
-        'SELECT * FROM work_data WHERE (userToken = (?) AND rootKey = (?))',
-        [req.headers.authorization, req.query.rootKey]
+        'SELECT * FROM work_data WHERE userToken = (?)',
+        [req.headers.authorization]
       );
       return res.status(HttpStatusCodes.OK).json({ data });
     } catch (e) {
@@ -31,7 +31,6 @@ export class WorkDataController {
         `INSERT INTO work_data (rootKey, userToken, content) 
          VALUES (?,?,?) 
          ON DUPLICATE KEY UPDATE 
-             userToken = VALUES(userToken), 
              content = VALUES(content)`,
         [rootKey, Authorization, content]
       );
