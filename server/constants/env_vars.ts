@@ -24,6 +24,10 @@ export default {
     Secret: process.env.JWT_SECRET ?? '',
     Exp: process.env.COOKIE_EXP ?? '', // exp at the same time as the cookie
   },
+  EncryptPwd: {
+    Key: process.env.ENCRYPT_PASSWORD_KEY ?? '',
+    Iv: process.env.ENCRYPT_PASSWORD_IV ?? '',
+  },
   DataBase: {
     host: process.env.DB_HOST ?? '',
     port: Number(process.env.DB_PORT),
