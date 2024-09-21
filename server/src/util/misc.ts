@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 /**
  * Miscellaneous shared functions go here.
  */
@@ -22,4 +24,13 @@ export function tick(milliseconds: number): Promise<void> {
 
 export function camelToKebabCase(str: string): string {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+/**
+ * 获取随机十六进制字符串
+ */
+export function getRandomHex(size: number): string {
+  const randomBytes = crypto.randomBytes(size);
+  const randomHex = randomBytes.toString('hex');
+  return randomHex;
 }
