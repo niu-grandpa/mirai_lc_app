@@ -1,15 +1,26 @@
 export interface UserModel {
   token: string;
-  is_vip: boolean;
-  email: string;
-  password: string;
+  isVip?: boolean;
+  phoneNumber: string;
   nickname: string;
-  created_at?: number;
-  avatar_url: string;
+  password: string;
+  createdAt?: number;
+  avatar: string;
+  isLogin?: boolean;
+  vipExpiration?: number;
+}
+
+export interface UserLogin {
+  phoneNumber: string;
+  password: string;
+  headers: {
+    Authorization: string;
+  };
 }
 
 export interface RegisterUser {
-  email: string;
+  phoneNumber: string;
+  code: string;
   password: string;
   nickname: string;
 }
