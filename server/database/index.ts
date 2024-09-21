@@ -1,6 +1,6 @@
 import EnvVars from 'constants/env_vars';
 import logger from 'jet-logger';
-import mysql from 'mysql2';
+import mysql, { OkPacket } from 'mysql2';
 import createTable from './create_table';
 
 const { DataBase } = EnvVars;
@@ -14,7 +14,7 @@ const pool = mysql.createPool({
   database: DataBase.name,
 });
 
-export const useDB = <T = unknown>(sql: string, params?: any[]) => {
+export const useDB = <T = OkPacket>(sql: string, params?: any[]) => {
   return new Promise<T[]>((resolve, reject) => {
     pool.execute(sql, params, (err, results) => {
       if (err) {
