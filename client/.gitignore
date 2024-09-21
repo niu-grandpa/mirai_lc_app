@@ -18,3 +18,6 @@ dist/
 types
 
 src/stores/mock_data.json
+
+.env.development
+.env.production
