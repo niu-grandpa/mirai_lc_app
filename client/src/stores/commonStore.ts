@@ -12,7 +12,14 @@ export const useCommonStore = defineStore('common', {
   state: () => ({
     _theme: commonConfig.theme as Theme,
     _loading: commonConfig.loading,
-    _dragData: { x: 0, y: 0, el: null, width: 0, height: 0, action: 'end' },
+    _dragData: {
+      x: 0,
+      y: 0,
+      el: null,
+      width: 0,
+      height: 0,
+      action: 'end',
+    } as DragState,
   }),
 
   getters: {
