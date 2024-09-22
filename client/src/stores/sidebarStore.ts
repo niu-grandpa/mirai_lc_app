@@ -18,9 +18,9 @@ export const useSidebarStore = defineStore('sidebar', {
 
   actions: {
     setWidth(w: number) {
-      const hidden = !(w <= 250);
-      this._visible = hidden;
-      this._width = !hidden ? 42 : w;
+      const visible = !(w <= 250);
+      this._visible = visible;
+      this._width = !visible ? 42 : w;
     },
 
     updateInitWidth() {
