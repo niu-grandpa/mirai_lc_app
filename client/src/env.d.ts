@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly PUBLIC_ENV: string;
   readonly PUBLIC_PROXY: string;
   readonly PUBLIC_API_PREFIX: string;
+  readonly PUBLIC_JWT_SECRET: string;
 }
 
 interface ImportMeta {
