@@ -9,5 +9,6 @@ router.post('/register', controller.register);
 router.post('/logout', authenticateUser, controller.logout);
 router.delete('/destroy', authenticateUser, controller.destory);
 router.post('/gen-anode-id', authenticateUser, controller.genANodeKey);
+router.put('/update-profile', authenticateUser, controller.updateProfile);
 
 export default router;
