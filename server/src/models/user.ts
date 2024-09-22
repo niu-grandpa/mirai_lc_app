@@ -1,3 +1,5 @@
+import { IReqHeaders } from '@/types/types';
+
 export interface UserModel {
   token: string;
   isVip?: boolean;
@@ -13,9 +15,6 @@ export interface UserModel {
 export interface UserLogin {
   phoneNumber: string;
   password: string;
-  headers: {
-    Authorization: string;
-  };
 }
 
 export interface RegisterUser {
@@ -28,4 +27,10 @@ export interface RegisterUser {
 export interface GenANodeKey {
   prefix: string;
   suffix: string;
+}
+
+export interface UpdateUserProfile extends IReqHeaders {
+  avatar?: string;
+  nickname?: string;
+  password?: string;
 }
