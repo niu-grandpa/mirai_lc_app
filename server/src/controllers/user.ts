@@ -1,11 +1,16 @@
-import { GenANodeKey, RegisterUser, UserLogin, UserModel } from '@/models/user';
-import { IReq, IRes, RouteError } from '@/types/types';
+import {
+  GenANodeKey,
+  RegisterUser,
+  UpdateUserProfile,
+  UserModel,
+} from '@/models/user';
+import { IReq, IReqHeaders, IReqQuery, IRes, RouteError } from '@/types/types';
 import EnvVars from 'constants/env_vars';
 import HttpStatusCodes from 'constants/http_status_codes';
 import crypto from 'crypto';
 import { useDB } from 'database';
 import logger from 'jet-logger';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { nanoid } from 'nanoid';
 
 class PasswordUtils {
@@ -33,9 +38,13 @@ class PasswordUtils {
   protected parse(text: string): string {
     jwt.verify(text, EnvVars.Jwt.Secret, (err, decode) => {
       if (err) return;
-      text = this.encrypt(decode as string);
+      text = this.encrypt((decode as JwtPayload).sub!);
     });
     return text;
+  }
+
+  protected stringify(text: string): string {
+    return jwt.sign(text, EnvVars.Jwt.Secret, { expiresIn: '1h' });
   }
 }
 
@@ -77,6 +86,9 @@ class UserController extends PasswordUtils {
         'SELECT * FROM users WHERE phoneNumber = (?)',
         [phoneNumber]
       );
+
+      user.password = this.stringify(this.decrypt(user.password));
+
       const token = this._generateToken(user);
       await useDB('UPDATE users SET token = (?) WHERE phoneNumber = (?)', [
         token,
@@ -97,7 +109,10 @@ class UserController extends PasswordUtils {
     return token;
   }
 
-  login = async (req: IReq<UserLogin>, res: IRes): Promise<IRes> => {
+  login = async (
+    req: IReqQuery<{ phoneNumber: string; password: string }>,
+    res: IRes
+  ): Promise<IRes> => {
     try {
       const authorization = req.headers.authorization;
       const { phoneNumber, password } = req.query;
@@ -150,13 +165,17 @@ class UserController extends PasswordUtils {
           msg = '禁止重复登录';
           code = HttpStatusCodes.BAD_REQUEST;
         } else if (phoneNumber && password) {
-          if (
-            this.decrypt(password as string) !== this.decrypt(user.password)
-          ) {
+          if (this.parse(password) !== this.decrypt(user.password)) {
             msg = '密码错误';
             code = HttpStatusCodes.BAD_REQUEST;
           } else {
-            msg = this._generateToken(user);
+            user.password = password;
+            const newToken = this._generateToken(user);
+            msg = newToken;
+            useDB('UPDATE users SET token = (?) WHERE phoneNumber = (?)', [
+              newToken,
+              user.phoneNumber,
+            ]);
           }
         }
       }
@@ -168,7 +187,7 @@ class UserController extends PasswordUtils {
     }
   };
 
-  logout = async (req: IReq<UserLogin>, res: IRes): Promise<IRes> => {
+  logout = async (req: IReq<IReqHeaders>, res: IRes): Promise<IRes> => {
     try {
       const {
         headers: { Authorization },
@@ -183,7 +202,10 @@ class UserController extends PasswordUtils {
     }
   };
 
-  destory = async (req: IReq, res: IRes): Promise<IRes> => {
+  destory = async (
+    req: IReqQuery<{ phoneNumber: string }>,
+    res: IRes
+  ): Promise<IRes> => {
     try {
       const result = await useDB(
         'DELETE FROM users WHERE (phoneNumber = (?) AND token = (?))',
@@ -199,6 +221,25 @@ class UserController extends PasswordUtils {
       throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
     }
   };
+
+  async updateProfile(req: IReq<UpdateUserProfile>, res: IRes): Promise<IRes> {
+    try {
+      const {
+        nickname,
+        password,
+        avatar,
+        headers: { Authorization },
+      } = req.body;
+      await useDB(
+        'UPDATE users SET avatar = (?), nickname = (?), password = (?) WHERE token = (?)',
+        [avatar, nickname, this.encrypt(this.parse(password!)), Authorization]
+      );
+      return res.status(HttpStatusCodes.OK).json({ data: 'OK' });
+    } catch (e) {
+      logger.err(e.message);
+      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+    }
+  }
 
   genANodeKey = async (req: IReq<GenANodeKey>, res: IRes): Promise<IRes> => {
     try {
