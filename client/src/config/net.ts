@@ -1,5 +1,6 @@
 import { getLocalItem } from '@/share';
 import { type AxiosRequestConfig } from 'axios';
+import common from './common';
 
 export default {
   method: 'GET',
@@ -8,7 +9,7 @@ export default {
   responseType: 'json',
   withXSRFToken: true,
   headers: {
-    Authorization: getLocalItem('USER_TOKEN'),
+    Authorization: getLocalItem(common.storageKeys.USER_TOKEN),
     'Content-Type': 'application/json',
   },
   baseURL: `${import.meta.env.PUBLIC_PROXY}${
