@@ -37,3 +37,9 @@ export interface GenericPagination {
   /**正倒序 */
   sort?: 1 | -1;
 }
+
+export interface IReqHeaders {
+  headers: {
+    Authorization: string;
+  };
+}
