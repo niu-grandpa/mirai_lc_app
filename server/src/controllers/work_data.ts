@@ -1,5 +1,5 @@
 import { RouteError, type IReq, type IRes } from '@/types/types';
-import { WorkDataModel } from '@models/work_data';
+import { SyncWorkDataReq, WorkDataModel } from '@models/work_data';
 import HttpStatusCodes from 'constants/http_status_codes';
 import { useDB } from 'database';
 
@@ -16,14 +16,11 @@ export class WorkDataController {
     }
   };
 
-  syncData = async (
-    req: IReq<{ rootKey: string; content: string }>,
-    res: IRes
-  ): Promise<IRes> => {
+  syncData = async (req: IReq<SyncWorkDataReq>, res: IRes): Promise<IRes> => {
     try {
       const {
         rootKey,
-        content, // @ts-ignore
+        content,
         headers: { Authorization },
       } = req.body;
 
