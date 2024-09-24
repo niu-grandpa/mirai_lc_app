@@ -1,6 +1,7 @@
 import { IReqHeaders } from '@/types/types';
 
 export interface UserModel {
+  id: number;
   token: string;
   isVip?: boolean;
   phoneNumber: string;
@@ -30,7 +31,9 @@ export interface GenANodeKey {
 }
 
 export interface UpdateUserProfile extends IReqHeaders {
+  uid: number;
   avatar?: string;
   nickname?: string;
   password?: string;
+  newPassword?: string;
 }
