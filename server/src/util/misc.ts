@@ -1,4 +1,6 @@
-import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import EnvVars from 'constants/env_vars';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 /**
  * Miscellaneous shared functions go here.
@@ -26,11 +28,38 @@ export function camelToKebabCase(str: string): string {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-/**
- * 获取随机十六进制字符串
- */
-export function getRandomHex(size: number): string {
-  const randomBytes = crypto.randomBytes(size);
-  const randomHex = randomBytes.toString('hex');
-  return randomHex;
+export async function encryptByBcrypt(data: string | Buffer): Promise<string> {
+  const saltRounds = 10; // 盐的轮数，值越高，计算越复杂
+  const hashed = await bcrypt.hash(data, saltRounds);
+  return hashed;
+}
+
+export async function verifyByBcrypt(
+  value: string,
+  hashed: string
+): Promise<boolean> {
+  const match = await bcrypt.compare(value, hashed);
+  return match;
+}
+
+export function signJwtToken(data: object): string {
+  const token = jwt.sign(data, EnvVars.Jwt.Secret, {
+    expiresIn: EnvVars.Jwt.Exp,
+  });
+  return token;
+}
+
+export function verifyJwtToken<T = unknown>(
+  token: string
+): Promise<JwtPayload & T> {
+  return new Promise((res, rej) => {
+    jwt.verify(token, EnvVars.Jwt.Secret, async (err, decoded) => {
+      if (err) {
+        return rej(err);
+      }
+      const data = decoded as JwtPayload & T;
+      data.exp = (data.exp ?? 0) * 1000;
+      res(data);
+    });
+  });
 }
