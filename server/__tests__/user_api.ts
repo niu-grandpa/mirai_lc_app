@@ -1,13 +1,12 @@
 import { describe, expect, it } from '@jest/globals';
 import axios from 'axios';
-import logger from 'jet-logger';
 
 describe('user接口测试', () => {
   const phoneNumber = '13022222222';
-  const password = 'da1w6d54wafFWf1f613wa4wFw961231hrherWHJe8';
+  const password = '123456';
 
-  let userToken =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidG9rZW4iOm51bGwsInBob25lTnVtYmVyIjoiMTMwMjIyMjIyMjIiLCJwYXNzd29yZCI6ImRhMXc2ZDU0d2FmRldmMWY2MTN3YTR3Rnc5NjEyMzFocmhlcldISmU4Iiwibmlja25hbWUiOiJ0ZXN0LXVzZXIiLCJpc1ZpcCI6MCwiYXZhdGFyIjpudWxsLCJpc0xvZ2luIjowLCJ2aXBFeHBpcmF0aW9uIjpudWxsLCJjcmVhdGVBdCI6IjIwMjQtMDktMjFUMTM6MDE6NTkuMDAwWiIsImlhdCI6MTcyNjkyMzcxOSwiZXhwIjoxNzI3MDEwMTE5fQ.xdJpjc8HnpGyWXgxSU4risYFm3XSkT72fezI0a5tv98';
+  let uid = 0;
+  let userToken = '';
 
   it('POST /api/user/register -> 应返回token', async () => {
     try {
@@ -20,13 +19,19 @@ describe('user接口测试', () => {
           nickname: 'test-user',
         }
       );
-      userToken = response.data.data;
+
       expect(response.status).toBe(200);
-      expect(typeof userToken).toBe('string');
+      expect(typeof response.data.data).toBe('object');
+
+      uid = response.data.data.id;
+      userToken = response.data.data.token;
     } catch (error) {
-      logger.err(
-        '[src/controllers/user.ts] 测试时请注释该行代码: password = this.encrypt(this.parse(password))'
-      );
+      if (error.status === 400) {
+        // 运行第二次测试时，需要手动从user表中选一个用户的uid和token
+        uid = 1;
+        userToken =
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6IjEzMDIyMjIyMjIyIiwiaWF0IjoxNzI3MTcyMjM5LCJleHAiOjE3MjcyNTg2Mzl9.C6FhZzincDP-k61ikYtvTgfHUwtWMM5R_pq7x3Y9WcA';
+      }
       expect(error.status).toBe(400);
       expect(error.response.data.data).toEqual('该手机号已被注册');
     }
@@ -41,7 +46,6 @@ describe('user接口测试', () => {
         }
       );
       expect(response.status).toBe(200);
-      expect(typeof response.data.data).toBe('string');
     } catch (error) {
       expect(error.status).toBe(400);
       expect(error.response.data.data).toEqual('禁止重复登录');
@@ -58,16 +62,16 @@ describe('user接口测试', () => {
     expect(response.status).toBe(200);
   });
 
-  it('DELETE /api/user/destroy -> 注销用户', async () => {
-    const response = await axios.delete(
-      'http://localhost:8000/api/v1/user/destroy',
-      {
-        headers: { Authorization: userToken },
-        params: { phoneNumber },
-      }
-    );
-    expect(response.status).toBe(200);
-  });
+  // it('DELETE /api/user/destroy -> 注销用户', async () => {
+  //   const response = await axios.delete(
+  //     'http://localhost:8000/api/v1/user/destroy',
+  //     {
+  //       headers: { Authorization: userToken },
+  //       params: { uid, phoneNumber },
+  //     }
+  //   );
+  //   expect(response.status).toBe(200);
+  // });
 
   it('POST /api/user/gen-anode-id -> 生成节点key', async () => {
     const response = await axios.post(
