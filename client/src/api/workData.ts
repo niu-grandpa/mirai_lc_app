@@ -1,25 +1,32 @@
-import { FolderANode } from '@/share/abstractNode';
+import { type FolderANode } from '@/share/abstractNode';
 import { request } from '.';
 
-interface AllOfWorkData {
-  userToken: string;
-  rootKey: string;
-  content: string;
+export interface GetWorkDataRep {
+  userId: number;
+  saveTime: number;
+  data: FolderANode[];
   created_at: string;
 }
 
-export const getWorkData = async (): Promise<FolderANode[]> => {
-  const { data } = await request<AllOfWorkData[]>({
-    method: 'GET',
-    url: '/work-data/all',
-  });
-  return data.map(({ content }) => JSON.parse(content));
+export type SyncWorkDataReq = {
+  uid: number;
+  saveTime: number;
+  data: FolderANode[];
 };
 
-export const syncWorkData = async (rootKey: string, content: string) => {
-  await request<AllOfWorkData[]>({
+export const getWorkData = async (uid: number): Promise<GetWorkDataRep> => {
+  const { data } = await request<GetWorkDataRep>({
+    method: 'GET',
+    url: '/work-data/all',
+    data: { uid },
+  });
+  return data;
+};
+
+export const syncWorkData = async (data: SyncWorkDataReq) => {
+  await request({
     method: 'PUT',
     url: '/work-data/sync',
-    data: { rootKey, content },
+    data,
   });
 };
