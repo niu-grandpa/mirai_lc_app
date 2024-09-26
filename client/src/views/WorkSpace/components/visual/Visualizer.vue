@@ -66,24 +66,20 @@ const processElementsDrag = useDrag((action, info) => {
     commonStore._dragData.el = null;
   }
 
-  workspaceStore.updateNode(
-    el!.id,
-    {
-      x,
-      y,
-      attrs: {
-        'data-x': x,
-        'data-y': y,
-        class: { active: action === 'move' },
-        style: {
-          width: `${width}px`,
-          height: `${height}px`,
-          transform: `translate(${x}px, ${y}px)`,
-        },
+  workspaceStore.updateNode(el!.id, {
+    x,
+    y,
+    attrs: {
+      'data-x': x,
+      'data-y': y,
+      class: { active: action === 'move' },
+      style: {
+        width: `${width}px`,
+        height: `${height}px`,
+        transform: `translate(${x}px, ${y}px)`,
       },
     },
-    false
-  );
+  });
 });
 
 const createGrids = (w = 0, h = 0) => {
