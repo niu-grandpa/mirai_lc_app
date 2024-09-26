@@ -53,7 +53,9 @@ export default class TreeManager extends TreeManagerShare {
    * @returns 排序后的树数据
    */
   sortNodes() {
-    this.recursiveSortNodes(this.getData());
+    if (this.temp?.length) {
+      this.recursiveSortNodes();
+    }
     return this.getData();
   }
 

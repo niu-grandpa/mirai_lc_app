@@ -121,8 +121,8 @@ export class TreeManagerShare {
    * @param nodes 当前节点数组
    */
   protected recursiveSortNodes(nodes: TreeDataCommonType[]) {
-    nodes.sort((a, b) => a.name.localeCompare(b.name));
-    nodes.forEach(node => {
+    nodes?.sort((a, b) => a.name.localeCompare(b.name));
+    nodes?.forEach(node => {
       if (node.children && node.children.length > 0) {
         this.recursiveSortNodes(node.children);
       }
