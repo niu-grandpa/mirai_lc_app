@@ -11,52 +11,15 @@
 </template>
 
 <script setup lang="ts">
-import commonConfig from '@/config/common';
 import { useCommonStore } from '@/stores/commonStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { theme } from 'ant-design-vue';
-import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useNodeManagerStore } from './stores/nodeManagerStore';
+import { computed } from 'vue';
 
 const commonStore = useCommonStore();
-const workspaceStore = useWorkspaceStore();
-const nodeManagerStore = useNodeManagerStore();
 
 const algorithm = computed(() =>
   commonStore.theme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
 );
-
-onBeforeMount(() => {
-  workspaceStore.getLocalWorkData();
-
-  nodeManagerStore.updateSelectedKeys();
-  nodeManagerStore.updateExpandedKeys();
-
-  workspaceStore.initOpenedFileKeys();
-  workspaceStore.updateOpenedFilesByKeys('add', [
-    ...workspaceStore.openedFileKeys,
-  ]);
-});
-
-const timer = ref();
-
-onMounted(() => {
-  if (!timer.value) {
-    timer.value = setInterval(() => {
-      workspaceStore.updateWorkData(workspaceStore.workData);
-    }, commonConfig.autoSaveInterval);
-  }
-
-  window.addEventListener('beforeunload', e => {
-    e.preventDefault();
-    e.returnValue = true;
-  });
-});
-
-onBeforeUnmount(() => {
-  clearInterval(timer.value);
-  timer.value = null;
-});
 </script>
 
 <style>
