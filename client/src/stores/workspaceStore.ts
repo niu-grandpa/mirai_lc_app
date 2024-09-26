@@ -1,3 +1,9 @@
+import {
+  getWorkData,
+  syncWorkData,
+  type GetWorkDataRep,
+  type SyncWorkDataReq,
+} from '@/api/workData';
 import commonConfig from '@/config/common';
 import { type CreateANodeOptions } from '@/core/tree-manager/handler';
 import { useTreeManager } from '@/hooks';
@@ -10,6 +16,7 @@ import {
 } from '@/share/abstractNode';
 import { defineStore } from 'pinia';
 import { useCommonStore } from './commonStore';
+import { useUserStore } from './userStore';
 
 export interface WorkspaceState {
   _workData: FolderANode[];
@@ -30,25 +37,61 @@ export const useWorkspaceStore = defineStore('workspace', {
 
   getters: {
     commonStore: () => useCommonStore(),
+    userStore: () => useUserStore(),
     workData: state => state._workData,
     openedFileKeys: state => state._openedFileKeys,
     openedFiles: state => state._openedFiles,
   },
 
   actions: {
-    getLocalWorkData() {
-      const data = getLocalItem<TreeDataCommonType[]>(storageKeys.FILE_DATA);
-      this._workData = treeManager.setData(data).sortNodes();
+    async initData(): Promise<FolderANode[]> {
+      const localData = getLocalItem<GetWorkDataRep>(storageKeys.WORK_DATA);
+      let value: FolderANode[] = localData.data;
+
+      if (this.userStore.isVip) {
+        const coludData = await getWorkData(this.userStore.uid);
+        // 如果云端数据比本地的新，则更新本地数据
+        if (coludData.saveTime > localData.saveTime) {
+          value = coludData.data;
+        } else {
+          // 反之，更新云端数据
+          await this.updateWorkData(value, { saveToLocal: false });
+        }
+      }
+
+      value = treeManager.setData(value).sortNodes();
+      this.updateWorkData(value);
       treeManager.freed();
+
+      return value;
     },
 
-    updateWorkData(value: FolderANode[], sort = true) {
-      const newData = treeManager
-        .setData(value)
-        [sort ? 'sortNodes' : 'getData']();
-      treeManager.freed();
-      this._workData = newData;
-      setLocalItem(storageKeys.FILE_DATA, newData);
+    async updateWorkData(
+      data?: FolderANode[],
+      options: {
+        saveToLocal?: boolean;
+        saveToCould?: boolean;
+      } = {
+        saveToLocal: true,
+        saveToCould: false,
+      }
+    ) {
+      if (data) {
+        this._workData = data;
+      }
+
+      const params: SyncWorkDataReq = {
+        uid: this.userStore.uid,
+        saveTime: Date.now(),
+        data: this.workData,
+      };
+
+      if (options.saveToLocal) {
+        setLocalItem(storageKeys.WORK_DATA, params);
+      }
+      if (this.userStore.isVip && options.saveToCould) {
+        await syncWorkData(params);
+      }
     },
 
     findOneNode(key: string) {
@@ -64,7 +107,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       await treeManager.setData(this.workData).createAndInsertNode(opts);
     },
 
-    updateNode(key: string, value: object, sort = true) {
+    updateNode(key: string, value: object) {
       treeManager.setData(this.workData).updateOneNode(key, value);
     },
 
