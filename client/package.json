@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "author": "Ryan John",
-  "license": "CC0-1.0",
+  "license": "GPL-3.0-only",
   "scripts": {
     "dev": "rsbuild dev --open",
     "build": "rsbuild build",
