@@ -12,6 +12,7 @@ import { RouteError, type IReq, type IRes } from '@/types/types';
 import { camelToKebabCase } from '@/util/misc';
 import AdmZip from 'adm-zip';
 import HttpStatusCodes from 'constants/http_status_codes';
+import RequestErrText from 'constants/request_error_text';
 import { useDB } from 'database';
 import fs from 'fs-extra';
 import logger from 'jet-logger';
@@ -147,7 +148,10 @@ export class DownloadController extends Share {
       return res.status(HttpStatusCodes.OK).json({ data: link });
     } catch (e) {
       logger.err(e.message);
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+      throw new RouteError(
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        RequestErrText.ERROR
+      );
     }
   };
 
@@ -161,7 +165,10 @@ export class DownloadController extends Share {
       return res.status(HttpStatusCodes.OK).json({ data: link });
     } catch (e) {
       logger.err(e.message);
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+      throw new RouteError(
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        RequestErrText.ERROR
+      );
     }
   };
 

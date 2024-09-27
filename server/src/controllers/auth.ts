@@ -2,6 +2,7 @@ import { RouteError, type IReq, type IRes } from '@/types/types';
 import { UserModel } from '@models/user';
 import { verifyJwtToken } from '@util/misc';
 import HttpStatusCodes from 'constants/http_status_codes';
+import RequestErrText from 'constants/request_error_text';
 import { useDB } from 'database';
 import { NextFunction } from 'express';
 
@@ -18,7 +19,7 @@ export const authenticateUser = async <T>(
     if (!authorization) {
       return res
         .status(HttpStatusCodes.UNAUTHORIZED)
-        .json({ data: '请先登录' });
+        .json({ data: RequestErrText.NOT_LOGGED_IN });
     }
 
     const { exp, phoneNumber } = await verifyJwtToken<UserModel>(authorization);
@@ -31,13 +32,13 @@ export const authenticateUser = async <T>(
     if (!user) {
       return res
         .status(HttpStatusCodes.BAD_REQUEST)
-        .json({ data: '用户不存在' });
+        .json({ data: RequestErrText.NOT_USERS });
     }
 
     if (exp && exp < Date.now()) {
       return res
         .status(HttpStatusCodes.UNAUTHORIZED)
-        .json({ data: '登录已过期' });
+        .json({ data: RequestErrText.LOGIN_EXPIRED });
     }
 
     if (user.token !== authorization) {
@@ -53,6 +54,9 @@ export const authenticateUser = async <T>(
 
     next();
   } catch (e) {
-    throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+    throw new RouteError(
+      HttpStatusCodes.INTERNAL_SERVER_ERROR,
+      RequestErrText.ERROR
+    );
   }
 };

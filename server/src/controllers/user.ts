@@ -7,6 +7,7 @@ import {
 import { IReq, IReqHeaders, IReqQuery, IRes, RouteError } from '@/types/types';
 import { encryptByBcrypt, signJwtToken, verifyByBcrypt } from '@util/misc';
 import HttpStatusCodes from 'constants/http_status_codes';
+import RequestErrText from 'constants/request_error_text';
 import { useDB } from 'database';
 import logger from 'jet-logger';
 import { nanoid } from 'nanoid';
@@ -21,7 +22,7 @@ class UserController {
       if (!/^1[3-9]\d{9}$/.test(phoneNumber)) {
         return res
           .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ data: '手机号码格式错误' });
+          .json({ data: RequestErrText.WRONG_PHONE_NUMBER });
       }
 
       const [rows] = await useDB<{ count: number }>(
@@ -31,7 +32,7 @@ class UserController {
       if (rows.count > 0) {
         return res
           .status(HttpStatusCodes.BAD_REQUEST)
-          .json({ data: '该手机号已被注册' });
+          .json({ data: RequestErrText.USER_EXISTS });
       }
 
       // todo 验证码校验
@@ -49,17 +50,20 @@ class UserController {
       return res.status(HttpStatusCodes.OK).json({ data });
     } catch (e) {
       logger.err(e.message);
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+      throw new RouteError(
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        RequestErrText.ERROR
+      );
     }
   };
 
   login = async (
-    req: IReqQuery<{ phoneNumber: string; password: string }>,
+    req: IReqQuery<{ nickname: string; phoneNumber: string; password: string }>,
     res: IRes
   ): Promise<IRes> => {
     try {
       const { authorization } = req.headers;
-      const { phoneNumber, password } = req.query;
+      const { nickname, phoneNumber, password } = req.query;
 
       let resp: string | UserModel = '';
       let code = HttpStatusCodes.OK;
@@ -71,10 +75,10 @@ class UserController {
           [authorization]
         );
         if (!user) {
-          resp = '请重新登录';
+          resp = RequestErrText.NOT_USERS;
           code = HttpStatusCodes.UNAUTHORIZED;
         } else if (user.isLogin) {
-          resp = '禁止重复登录';
+          resp = RequestErrText.REPEAT_LOGIN;
           code = HttpStatusCodes.BAD_REQUEST;
         } else {
           await useDB(
@@ -83,16 +87,16 @@ class UserController {
           );
           resp = user;
         }
-      } else if (phoneNumber && password) {
+      } else if ((nickname || phoneNumber) && password) {
         const [user] = await useDB<UserModel>(
-          'SELECT * FROM users WHERE phoneNumber = (?)',
-          [phoneNumber]
+          'SELECT * FROM users WHERE (phoneNumber = (?) OR nickname = (?))',
+          [phoneNumber ?? '', nickname ?? '']
         );
         if (!user) {
-          resp = '该手机号尚未注册';
+          resp = RequestErrText.NOT_USERS;
           code = HttpStatusCodes.BAD_REQUEST;
         } else if (user.isLogin) {
-          resp = '禁止重复登录';
+          resp = RequestErrText.REPEAT_LOGIN;
           code = HttpStatusCodes.BAD_REQUEST;
         } else if (phoneNumber && password) {
           if (await verifyByBcrypt(password, user.password)) {
@@ -104,19 +108,22 @@ class UserController {
             user.token = newToken;
             resp = user;
           } else {
-            resp = '密码错误';
+            resp = RequestErrText.WRONG_PASSWORD;
             code = HttpStatusCodes.BAD_REQUEST;
           }
         }
       } else {
-        resp = '参数缺失';
+        resp = RequestErrText.MISSING_PARAMS;
         code = HttpStatusCodes.BAD_REQUEST;
       }
 
       return res.status(code).json({ data: resp });
     } catch (e) {
       logger.err(e.message);
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+      throw new RouteError(
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        RequestErrText.ERROR
+      );
     }
   };
 
@@ -128,10 +135,13 @@ class UserController {
       await useDB('UPDATE users SET isLogin = false WHERE token = (?)', [
         Authorization,
       ]);
-      return res.status(HttpStatusCodes.OK).json({ data: 'OK' });
+      return res.status(HttpStatusCodes.OK).json({ data: RequestErrText.OK });
     } catch (e) {
       logger.err(e.message);
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+      throw new RouteError(
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        RequestErrText.ERROR
+      );
     }
   };
 
@@ -146,14 +156,17 @@ class UserController {
       );
       // @ts-ignore
       if (result.affectedRows > 0) {
-        return res.status(HttpStatusCodes.OK).json({ data: 'OK' });
+        return res.status(HttpStatusCodes.OK).json({ data: RequestErrText.OK });
       }
       return res
         .status(HttpStatusCodes.BAD_REQUEST)
-        .json({ data: '用户不存在' });
+        .json({ data: RequestErrText.NOT_USERS });
     } catch (e) {
       logger.err(e.message);
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+      throw new RouteError(
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        RequestErrText.ERROR
+      );
     }
   };
 
@@ -165,10 +178,13 @@ class UserController {
         'UPDATE users SET avatar = (?), nickname = (?) WHERE id = (?)',
         [avatar, nickname, uid]
       );
-      return res.status(HttpStatusCodes.OK).json({ data: 'OK' });
+      return res.status(HttpStatusCodes.OK).json({ data: RequestErrText.OK });
     } catch (e) {
       logger.err(e.message);
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+      throw new RouteError(
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        RequestErrText.ERROR
+      );
     }
   }
 
@@ -179,7 +195,10 @@ class UserController {
       return res.status(HttpStatusCodes.OK).json({ data: key });
     } catch (e) {
       logger.err(e.message);
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, '内部错误');
+      throw new RouteError(
+        HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        RequestErrText.ERROR
+      );
     }
   };
 }

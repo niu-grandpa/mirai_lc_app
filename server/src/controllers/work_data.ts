@@ -1,6 +1,7 @@
 import { IReqQuery, RouteError, type IReq, type IRes } from '@/types/types';
 import { SyncWorkDataReq, WorkDataModel } from '@models/work_data';
 import HttpStatusCodes from 'constants/http_status_codes';
+import RequestErrText from 'constants/request_error_text';
 import { useDB } from 'database';
 
 export class WorkDataController {
@@ -29,7 +30,7 @@ export class WorkDataController {
             UPDATE data = VALUES(data), saveTime = VALUES(saveTime)`,
         [uid, data, String(saveTime)]
       );
-      return res.status(HttpStatusCodes.OK).json({ data: 'OK' });
+      return res.status(HttpStatusCodes.OK).json({ data: RequestErrText.OK });
     } catch (e) {
       throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, e.message);
     }
