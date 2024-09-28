@@ -10,6 +10,8 @@ enum RequestErrText {
   REPEAT_LOGIN = '重复登录',
   WRONG_PASSWORD = '密码不正确',
   MISSING_PARAMS = '缺少必要参数',
+  PASSWORD_LENGHT = '密码长度至少6位',
+  VERIFICATION_ERROR = '验证码错误',
 }
 
 export default RequestErrText;
