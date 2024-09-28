@@ -14,10 +14,11 @@ export interface UserModel {
 }
 
 export interface UserLogin {
+  nickname: string;
   phoneNumber: string;
   password: string;
+  code: string;
 }
-
 export interface RegisterUser {
   phoneNumber: string;
   code: string;
