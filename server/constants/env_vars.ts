@@ -35,4 +35,8 @@ export default {
     pwd: process.env.DB_PASSWORD ?? '',
     name: process.env.DB_NAME ?? '',
   },
+  Alicloud: {
+    accessKeyId: process.env.ALIBABA_CLOUD_ACCESS_KEY_ID ?? '',
+    accessKeySecret: process.env.ALIBABA_CLOUD_ACCESS_KEY_SECRET ?? '',
+  },
 } as const;
