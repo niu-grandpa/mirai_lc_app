@@ -1,18 +1,14 @@
 import net from '@/config/net';
 import { message } from 'ant-design-vue';
 import axios, { type Axios, type AxiosRequestConfig } from 'axios';
+import deepmerge from 'deepmerge';
 
 const createRequest = () => {
   const _axios = axios;
 
   _axios.interceptors.request.use(
-    v => {
-      if (v.method === 'GET' || v.method === 'DELETE') {
-        v.params = Object.assign(v.data, v.params);
-        v.data = {};
-      }
-      return Object.assign(net, v);
-    },
+    // @ts-ignore
+    v => deepmerge(net, v),
     err => {
       message.error('网络请求错误');
       return Promise.reject(err);
@@ -24,17 +20,15 @@ const createRequest = () => {
       if (process.env.NODE_ENV === 'development') {
         console.log('response: ', res.data);
       }
-      if (res.status !== 200) {
-        if (typeof res.data === 'string') {
-          message.error(res.data);
-        } else {
-          console.log('响应错误: ', res.data);
-        }
-      }
       return res;
     },
     err => {
-      message.error('服务器错误，请稍后再试。');
+      if (err.status !== 500) {
+        message.error(err.response.data.data);
+      } else {
+        message.error('服务器错误，请稍后再试。');
+      }
+
       return Promise.reject(err);
     }
   );
