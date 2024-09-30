@@ -28,6 +28,9 @@
     "node": ">=8.10.0"
   },
   "dependencies": {
+    "@alicloud/dysmsapi20170525": "^3.0.0",
+    "@alicloud/openapi-client": "^0.4.12",
+    "@alicloud/tea-util": "^1.4.9",
     "@jest/globals": "^29.7.0",
     "@types/adm-zip": "^0.5.5",
     "@types/jest": "^29.5.12",
