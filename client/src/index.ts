@@ -7,6 +7,7 @@ import { createApp } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue';
 import routes from './routes';
+import { useUserStore } from './stores/userStore';
 
 const app = createApp(App);
 
@@ -18,3 +19,11 @@ const vueRouter = createRouter({
 const pinia = createPinia();
 
 app.use(vueRouter).use(pinia).use(HljsVuePlugin).mount('#root');
+
+const userStore = useUserStore();
+
+vueRouter.beforeEach((to, from) => {
+  if (to.name === 'login' && userStore.uid) {
+    vueRouter.replace('/workspace');
+  }
+});
