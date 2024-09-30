@@ -13,13 +13,21 @@
 <script setup lang="ts">
 import { useCommonStore } from '@/stores/commonStore';
 import { theme } from 'ant-design-vue';
-import { computed } from 'vue';
+import { computed, onBeforeMount } from 'vue';
+import { useUserStore } from './stores/userStore';
 
 const commonStore = useCommonStore();
+const userStore = useUserStore();
 
 const algorithm = computed(() =>
   commonStore.theme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
 );
+
+onBeforeMount(() => {
+  try {
+    userStore.token && userStore.login();
+  } catch {}
+});
 </script>
 
 <style>
