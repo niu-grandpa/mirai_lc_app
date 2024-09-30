@@ -15,7 +15,7 @@ import { WorkSpaceLayout } from '@/layouts';
 import { useNodeManagerStore } from '@/stores/nodeManagerStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { message } from 'ant-design-vue';
-import { onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { WorkspaceSidebar, WorkspaceVisual } from './components';
 
 const workspaceStore = useWorkspaceStore();
@@ -24,7 +24,7 @@ const nodeManagerStore = useNodeManagerStore();
 const timer = ref();
 
 const initData = async () => {
-  const hide = message.loading('正在同步数据..', 0);
+  const hide = message.loading('同步数据中..', 0);
   try {
     await workspaceStore.initData();
 
@@ -36,29 +36,35 @@ const initData = async () => {
       ...workspaceStore.openedFileKeys,
     ]);
   } finally {
-    setTimeout(() => {
-      hide();
-    }, 1000);
+    setTimeout(hide, 1000);
   }
 };
 
 const autoSyncData = () => {
   if (!timer.value) {
-    timer.value = setInterval(() => {
-      workspaceStore.updateWorkData();
-    }, config.autoSaveInterval);
+    timer.value = setInterval(
+      workspaceStore.updateWorkData,
+      config.autoSaveInterval
+    );
   }
 };
+
+onMounted(initData);
+
+watch(
+  () => workspaceStore.workData.length,
+  len => {
+    if (len) {
+      autoSyncData();
+      console.log('自动同步已开启');
+    }
+  }
+);
 
 const onBeforeunload = (e: BeforeUnloadEvent) => {
   e.preventDefault();
   e.returnValue = true;
 };
-
-onBeforeMount(async () => {
-  await initData();
-  autoSyncData();
-});
 
 onMounted(() => {
   window.addEventListener('beforeunload', onBeforeunload);
