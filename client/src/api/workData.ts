@@ -18,7 +18,9 @@ export const getWorkData = async (uid: number): Promise<GetWorkDataRep> => {
   const { data } = await request<GetWorkDataRep>({
     method: 'GET',
     url: '/work-data/all',
-    data: { uid },
+    data: {
+      params: { uid },
+    },
   });
   return data;
 };
