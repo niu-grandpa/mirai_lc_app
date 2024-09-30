@@ -1,6 +1,7 @@
 import { request } from '.';
 
 export type UserLoginReq = {
+  nickname: string;
   phoneNumber: string;
   password: string;
 };
@@ -45,12 +46,14 @@ export const userRegister = async (
 };
 
 export const userLogin = async (
-  data?: UserLoginReq
+  params?: UserLoginReq
 ): Promise<UserLoginResp> => {
+  // @ts-ignore
+  delete params?.remember;
   const { data: res } = await request<UserLoginResp>({
     method: 'GET',
     url: '/user/login',
-    data,
+    data: { params },
   });
   return res;
 };
@@ -67,8 +70,7 @@ export const userDestory = async (uid: number, phoneNumber: string) => {
     method: 'DELETE',
     url: '/user/destory',
     data: {
-      uid,
-      phoneNumber,
+      params: { uid, phoneNumber },
     },
   });
 };
@@ -78,5 +80,13 @@ export const updateUserProfile = async (data: UpdateUserProfile) => {
     method: 'PUT',
     url: '/user/update-profile',
     data,
+  });
+};
+
+export const getVerificationCode = async (phoneNumber: string) => {
+  await request({
+    method: 'POST',
+    url: '/user/send-verification-code',
+    data: { phoneNumber },
   });
 };
