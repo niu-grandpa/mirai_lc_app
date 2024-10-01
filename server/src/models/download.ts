@@ -1,5 +1,5 @@
 export interface DownloadModel {
-  file_key: string;
+  id: string;
   link: string;
 }
 
