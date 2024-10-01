@@ -1,3 +1,4 @@
+import TB_NAME from 'constants/db_table_name';
 import { useDB } from 'database';
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -11,15 +12,16 @@ export default function createTable() {
   };
 
   const promises = [
-    useDB(readSqlFile('user')),
-    useDB(readSqlFile('download')),
-    useDB(readSqlFile('work_data')),
+    useDB(readSqlFile(TB_NAME.USER)),
+    useDB(readSqlFile(TB_NAME.DOWNLOAD)),
+    useDB(readSqlFile(TB_NAME.WORK_DATA)),
+    useDB(readSqlFile(TB_NAME.VEFIF_CODE)),
   ];
 
   return new Promise(async (res, rej) => {
     try {
-      const values = await Promise.race(promises);
-      res(values);
+      await Promise.all(promises);
+      res(undefined);
     } catch (error) {
       return rej(error);
     }
