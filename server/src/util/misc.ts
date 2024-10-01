@@ -1,5 +1,9 @@
+import { IRes, RouteError } from '@/types/types';
 import bcrypt from 'bcrypt';
 import EnvVars from 'constants/env_vars';
+import HttpStatusCodes from 'constants/http_status_codes';
+import RequestErrText from 'constants/request_error_text';
+import logger from 'jet-logger';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
 /**
@@ -62,4 +66,16 @@ export function verifyJwtToken<T = unknown>(
       res(data);
     });
   });
+}
+
+export function handleReqError(e: Error): RouteError {
+  logger.err(e.message);
+  return new RouteError(
+    HttpStatusCodes.INTERNAL_SERVER_ERROR,
+    RequestErrText.ERROR
+  );
+}
+
+export function sendResponse(res: IRes, statusCode: number, data?: any): IRes {
+  return res.status(statusCode).json({ data: data ?? RequestErrText.OK });
 }
