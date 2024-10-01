@@ -1,4 +1,5 @@
-import { RouteError, type IReq, type IRes } from '@/types/types';
+import { type IReq, type IRes } from '@/types/types';
+import { handleReqError, sendResponse } from '@util/misc';
 import HttpStatusCodes from 'constants/http_status_codes';
 import RequestErrText from 'constants/request_error_text';
 import fs from 'fs-extra';
@@ -16,13 +17,9 @@ export class UploadController {
 
       const content = fs.readFileSync(file.path, 'utf8');
       fs.remove(file.path);
-
-      return res.status(HttpStatusCodes.OK).json({ data: content });
+      return sendResponse(res, HttpStatusCodes.OK, content);
     } catch (e) {
-      throw new RouteError(
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        RequestErrText.ERROR
-      );
+      throw handleReqError(e);
     }
   };
 }

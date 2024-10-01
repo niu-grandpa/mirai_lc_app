@@ -32,7 +32,7 @@ const getConnection = (err: any) => {
     logger.info('数据库连接成功');
     // 执行表创建
     createTable().then(() => {
-      logger.info('表创建成功!');
+      logger.info('所有表已创建');
     });
   }
 };

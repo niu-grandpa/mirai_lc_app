@@ -1,6 +1,7 @@
-import { RouteError, type IReq, type IRes } from '@/types/types';
+import { type IReq, type IRes } from '@/types/types';
 import { UserModel } from '@models/user';
-import { verifyJwtToken } from '@util/misc';
+import { handleReqError, sendResponse, verifyJwtToken } from '@util/misc';
+import TB_NAME from 'constants/db_table_name';
 import HttpStatusCodes from 'constants/http_status_codes';
 import RequestErrText from 'constants/request_error_text';
 import { useDB } from 'database';
@@ -17,46 +18,49 @@ export const authenticateUser = async <T>(
       req.headers.authorization || req.body.headers.Authorization;
 
     if (!authorization) {
-      return res
-        .status(HttpStatusCodes.UNAUTHORIZED)
-        .json({ data: RequestErrText.NOT_LOGGED_IN });
+      return sendResponse(
+        res,
+        HttpStatusCodes.UNAUTHORIZED,
+        RequestErrText.NOT_LOGGED_IN
+      );
     }
 
     const { exp, phoneNumber } = await verifyJwtToken<UserModel>(authorization);
     const [user] = await useDB<UserModel>(
-      'SELECT * FROM users WHERE phoneNumber = (?)',
+      `SELECT * FROM ${TB_NAME.USER} WHERE phoneNumber = (?)`,
       [phoneNumber]
     );
 
     //* 运行非user接口测试时需要注释以下全部判断
     if (!user) {
-      return res
-        .status(HttpStatusCodes.BAD_REQUEST)
-        .json({ data: RequestErrText.NOT_USERS });
+      return sendResponse(
+        res,
+        HttpStatusCodes.BAD_REQUEST,
+        RequestErrText.NOT_USERS
+      );
     }
 
     if (exp && exp < Date.now()) {
-      return res
-        .status(HttpStatusCodes.UNAUTHORIZED)
-        .json({ data: RequestErrText.LOGIN_EXPIRED });
+      return sendResponse(
+        res,
+        HttpStatusCodes.UNAUTHORIZED,
+        RequestErrText.LOGIN_EXPIRED
+      );
     }
 
     if (user.token !== authorization) {
       // 判断数据库的token是否需要更新
       const { exp: oldExp } = await verifyJwtToken<UserModel>(authorization);
       if (exp && oldExp && exp > oldExp) {
-        await useDB('UPDATE users SET token = (?) WHERE phoneNumber = (?)', [
-          authorization,
-          phoneNumber,
-        ]);
+        await useDB(
+          `UPDATE ${TB_NAME.USER} SET token = (?) WHERE phoneNumber = (?)`,
+          [authorization, phoneNumber]
+        );
       }
     }
 
     next();
   } catch (e) {
-    throw new RouteError(
-      HttpStatusCodes.INTERNAL_SERVER_ERROR,
-      RequestErrText.ERROR
-    );
+    throw handleReqError(e);
   }
 };

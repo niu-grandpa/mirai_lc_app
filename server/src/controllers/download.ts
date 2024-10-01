@@ -8,14 +8,13 @@ import {
   type FileANode,
   type FolderANode,
 } from '@/types/abstract_node';
-import { RouteError, type IReq, type IRes } from '@/types/types';
-import { camelToKebabCase } from '@/util/misc';
+import { type IReq, type IRes } from '@/types/types';
+import { camelToKebabCase, handleReqError, sendResponse } from '@/util/misc';
 import AdmZip from 'adm-zip';
+import TB_NAME from 'constants/db_table_name';
 import HttpStatusCodes from 'constants/http_status_codes';
-import RequestErrText from 'constants/request_error_text';
 import { useDB } from 'database';
 import fs from 'fs-extra';
-import logger from 'jet-logger';
 import path from 'path';
 
 const admzip = new AdmZip();
@@ -24,7 +23,10 @@ class Share {
   protected async insertIntoDB(model: DownloadModel) {
     const keys = Object.keys(model).join(',');
     const values = Object.values(model);
-    await useDB(`REPLACE INTO download (${keys}) VALUES (?,?)`, values);
+    await useDB(
+      `REPLACE INTO ${TB_NAME.DOWNLOAD} (${keys}) VALUES (?,?)`,
+      values
+    );
   }
 
   protected compileToVue(data: FileANode) {
@@ -145,13 +147,9 @@ export class DownloadController extends Share {
     try {
       const { type, node } = req.body;
       const { link } = await this._createOneWhole(node);
-      return res.status(HttpStatusCodes.OK).json({ data: link });
+      return sendResponse(res, HttpStatusCodes.OK, link);
     } catch (e) {
-      logger.err(e.message);
-      throw new RouteError(
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        RequestErrText.ERROR
-      );
+      throw handleReqError(e);
     }
   };
 
@@ -162,23 +160,19 @@ export class DownloadController extends Share {
     try {
       const { type, node } = req.body;
       const { link } = await this._createOneFile(type, node);
-      return res.status(HttpStatusCodes.OK).json({ data: link });
+      return sendResponse(res, HttpStatusCodes.OK, link);
     } catch (e) {
-      logger.err(e.message);
-      throw new RouteError(
-        HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        RequestErrText.ERROR
-      );
+      throw handleReqError(e);
     }
   };
 
   private _createModel(
-    file_key: string,
+    id: string,
     filename: string,
     format: 'vue' | 'zip' | 'json'
   ): DownloadModel {
     return {
-      file_key,
+      id,
       link: `/download/${filename}.${format}`,
     };
   }

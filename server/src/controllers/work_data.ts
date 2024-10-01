@@ -1,7 +1,8 @@
-import { IReqQuery, RouteError, type IReq, type IRes } from '@/types/types';
+import { IReqQuery, type IReq, type IRes } from '@/types/types';
 import { SyncWorkDataReq, WorkDataModel } from '@models/work_data';
+import { handleReqError, sendResponse } from '@util/misc';
+import TB_NAME from 'constants/db_table_name';
 import HttpStatusCodes from 'constants/http_status_codes';
-import RequestErrText from 'constants/request_error_text';
 import { useDB } from 'database';
 
 export class WorkDataController {
@@ -11,13 +12,13 @@ export class WorkDataController {
   ): Promise<IRes> => {
     try {
       const [data] = await useDB<WorkDataModel>(
-        'SELECT * FROM work_data WHERE userId = (?)',
+        `SELECT * FROM ${TB_NAME.WORK_DATA} WHERE userId = (?)`,
         [req.query.uid]
       );
       data.saveTime = Number(data.saveTime);
-      return res.status(HttpStatusCodes.OK).json({ data });
+      return sendResponse(res, HttpStatusCodes.OK, data);
     } catch (e) {
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, e.message);
+      throw handleReqError(e);
     }
   };
 
@@ -25,14 +26,14 @@ export class WorkDataController {
     try {
       const { uid, data, saveTime } = req.body;
       await useDB(
-        `INSERT INTO work_data (userId, data, saveTime) VALUES (?,?,?) 
+        `INSERT INTO ${TB_NAME.WORK_DATA} (userId, data, saveTime) VALUES (?,?,?) 
          ON DUPLICATE KEY 
             UPDATE data = VALUES(data), saveTime = VALUES(saveTime)`,
         [uid, data, String(saveTime)]
       );
-      return res.status(HttpStatusCodes.OK).json({ data: RequestErrText.OK });
+      return sendResponse(res, HttpStatusCodes.OK);
     } catch (e) {
-      throw new RouteError(HttpStatusCodes.INTERNAL_SERVER_ERROR, e.message);
+      throw handleReqError(e);
     }
   };
 }
