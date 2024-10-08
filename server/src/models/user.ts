@@ -3,6 +3,7 @@ import { IReqHeaders } from '@/types/types';
 export interface UserModel {
   id: number;
   token: string;
+  account: string;
   isVip?: boolean;
   phoneNumber: string;
   nickname: string;
@@ -14,7 +15,7 @@ export interface UserModel {
 }
 
 export interface UserLogin {
-  nickname: string;
+  account: string;
   phoneNumber: string;
   password: string;
   code: string;
