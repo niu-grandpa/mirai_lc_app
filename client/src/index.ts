@@ -23,7 +23,7 @@ app.use(vueRouter).use(pinia).use(HljsVuePlugin).mount('#root');
 const userStore = useUserStore();
 
 vueRouter.beforeEach((to, from) => {
-  if (to.name === 'login' && userStore.uid) {
+  if (to.name === 'login' && userStore.account) {
     vueRouter.replace('/workspace');
   }
 });
