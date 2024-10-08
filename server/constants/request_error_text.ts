@@ -9,8 +9,10 @@ enum RequestErrText {
   USER_EXISTS = '用户已存在',
   REPEAT_LOGIN = '重复登录',
   WRONG_PASSWORD = '密码不正确',
+  NOT_PASSWORD = '未输入密码',
   MISSING_PARAMS = '缺少必要参数',
   PASSWORD_LENGHT = '密码长度至少6位',
+  NOT_VERIFICATION = '未输入验证码',
   VERIFICATION_ERROR = '验证码错误',
 }
 
