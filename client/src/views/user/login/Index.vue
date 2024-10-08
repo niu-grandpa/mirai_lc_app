@@ -1,7 +1,7 @@
 <template>
   <Layout>
     <a-tabs destroyInactiveTabPane v-model:activeKey="activeKey" centered>
-      <a-tab-pane key="usePwd" tab="用户密码登录">
+      <a-tab-pane key="usePwd" tab="账号密码登录">
         <a-form
           ref="formRef"
           size="large"
@@ -11,19 +11,18 @@
           @finish="onLogin"
           validateTrigger="submit">
           <a-form-item
-            has-feedback
-            name="nickname"
+            name="account"
             :rules="[
               {
                 required: true,
                 whitespace: true,
-                validator: validatePass,
+                message: '请输入账号',
               },
             ]">
             <a-input
               autocomplete="off"
-              v-model:value="formState.nickname"
-              placeholder="用户名/手机号">
+              v-model:value="formState.account"
+              placeholder="账号">
               <template #prefix>
                 <UserOutlined class="form-item-icon" />
               </template>
@@ -31,14 +30,11 @@
           </a-form-item>
 
           <a-form-item
-            has-feedback
             name="password"
             :rules="[
               {
                 required: true,
-                min: 6,
-                max: 32,
-                message: '请输入符合要求的密码',
+                message: '请输入密码',
                 whitespace: true,
               },
             ]">
@@ -115,14 +111,14 @@
 <script setup lang="ts">
 import { useCommonStore } from '@/stores/commonStore';
 import { useUserStore } from '@/stores/userStore';
-import { FormInstance, type Rule } from 'ant-design-vue/es/form';
+import { FormInstance } from 'ant-design-vue/es/form';
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Layout from '../components/Layout.vue';
 import MobileFormItem from '../components/MobileFormItem.vue';
 
 interface FormState {
-  nickname: string;
+  account: string;
   phoneNumber: string;
   password: string;
   remember: boolean;
@@ -134,7 +130,7 @@ const userStore = useUserStore();
 const commonStore = useCommonStore();
 
 const initState = {
-  nickname: '',
+  account: '',
   phoneNumber: '',
   password: '',
   remember: true,
@@ -152,25 +148,8 @@ const initData = () => {
 
 watch(() => activeKey.value, initData);
 
-const isPhoneNumber = (value: string): boolean => {
-  return isNaN(Number(value)) && /^1[3-9]\d{9}$/.test(value);
-};
-
-const validatePass = async (_rule: Rule, value: string) => {
-  if (value === '') {
-    return Promise.reject('请输入用户名');
-  } else if (isPhoneNumber(value)) {
-    return Promise.reject('手机号码格式不正确');
-  }
-  return Promise.resolve();
-};
-
 const onLogin = async (values: FormState) => {
   try {
-    if (values.nickname && isPhoneNumber(values.nickname)) {
-      values.phoneNumber = values.nickname;
-      values.nickname = '';
-    }
     commonStore.setLoading(true);
     await userStore.login(values);
     router.replace('/workspace');
