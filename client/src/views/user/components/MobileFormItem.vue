@@ -1,6 +1,5 @@
 <template>
   <a-form-item
-    has-feedback
     name="phoneNumber"
     :rules="[
       {
@@ -20,7 +19,6 @@
   </a-form-item>
 
   <a-form-item
-    has-feedback
     name="code"
     :rules="[
       { required: true, min: 4, message: '验证码有误', whitespace: true },
@@ -42,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { getVerificationCode } from '@/api/user';
+import { sendSmsCode } from '@/api/user';
 import { message } from 'ant-design-vue';
 import { ref, watch } from 'vue';
 
@@ -85,8 +83,8 @@ const onGetCode = async () => {
     return message.error('请输入正确的手机号码');
   }
   try {
-    await getVerificationCode(mobile.value);
-    count.value = 5;
+    await sendSmsCode(mobile.value);
+    count.value = 60;
     disabled.value = true;
     message.success('验证码已发送');
     timer.value = setInterval(countdown, 1000);
