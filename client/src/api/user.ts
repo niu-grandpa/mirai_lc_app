@@ -1,7 +1,7 @@
 import { request } from '.';
 
 export type UserLoginReq = {
-  nickname: string;
+  account: string;
   phoneNumber: string;
   password: string;
 };
@@ -83,7 +83,7 @@ export const updateUserProfile = async (data: UpdateUserProfile) => {
   });
 };
 
-export const getVerificationCode = async (phoneNumber: string) => {
+export const sendSmsCode = async (phoneNumber: string) => {
   await request({
     method: 'POST',
     url: '/user/send-verification-code',
