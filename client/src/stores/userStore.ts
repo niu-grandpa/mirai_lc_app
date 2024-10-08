@@ -16,7 +16,7 @@ import { defineStore } from 'pinia';
 const { storageKeys } = commonConfig;
 
 const defaultData = {
-  _id: 0,
+  _account: 0,
   _token: getLocalItem(storageKeys.USER_TOKEN),
   _phoneNumber: '',
   _avatar: '',
@@ -29,7 +29,7 @@ export const useUserStore = defineStore('user', {
   state: () => defaultData,
 
   getters: {
-    uid: state => state._id,
+    account: state => state._account,
     token: state => state._token,
     isVip: state => state._isVip,
     avatar: state => state._avatar,
