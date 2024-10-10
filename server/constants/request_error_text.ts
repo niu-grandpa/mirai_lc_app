@@ -11,7 +11,7 @@ enum RequestErrText {
   WRONG_PASSWORD = '密码不正确',
   NOT_PASSWORD = '未输入密码',
   MISSING_PARAMS = '缺少必要参数',
-  PASSWORD_LENGHT = '密码长度至少6位',
+  PASSWORD_FORMAT_ERR = '至少8个字符, 包含字母、数字和特殊字符',
   NOT_VERIFICATION = '未输入验证码',
   VERIFICATION_ERROR = '验证码错误',
 }
