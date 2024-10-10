@@ -24,6 +24,12 @@ import { customAlphabet, nanoid } from 'nanoid';
 const initUserAccount = 1003640870;
 
 class UserController {
+  private _validatePass(password: string): boolean {
+    return !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,}$/.test(
+      password
+    );
+  }
+
   register = async (req: IReq<RegisterUser>, res: IRes): Promise<IRes> => {
     try {
       req.body.password = await encryptByBcrypt(req.body.password);
@@ -45,11 +51,11 @@ class UserController {
         );
       }
 
-      if (password.length < 6) {
+      if (!this._validatePass(password)) {
         return sendResponse(
           res,
           HttpStatusCodes.BAD_REQUEST,
-          RequestErrText.PASSWORD_LENGHT
+          RequestErrText.PASSWORD_FORMAT_ERR
         );
       }
 
@@ -170,23 +176,28 @@ class UserController {
   };
 
   destory = async (
-    req: IReqQuery<{ uid: string; phoneNumber: string }>,
+    req: IReqQuery<{ account: string }>,
     res: IRes
   ): Promise<IRes> => {
     try {
+      const { account } = req.query;
+      await useDB(`DELETE FROM ${TB_NAME.ACCOUNT} WHERE account = (?)`, [
+        account,
+      ]);
       const result = await useDB(
-        `DELETE FROM ${TB_NAME.USER} WHERE (id = (?) AND phoneNumber = (?))`,
-        [req.query.uid, req.query.phoneNumber]
+        `DELETE FROM ${TB_NAME.USER} WHERE account = (?)`,
+        [account]
       );
       // @ts-ignore
       if (result.affectedRows > 0) {
-        return res.status(HttpStatusCodes.OK).json({ data: RequestErrText.OK });
+        return sendResponse(res, HttpStatusCodes.OK);
+      } else {
+        return sendResponse(
+          res,
+          HttpStatusCodes.BAD_REQUEST,
+          RequestErrText.NOT_USERS
+        );
       }
-      return sendResponse(
-        res,
-        HttpStatusCodes.BAD_REQUEST,
-        RequestErrText.NOT_USERS
-      );
     } catch (e) {
       throw handleReqError(e);
     }
