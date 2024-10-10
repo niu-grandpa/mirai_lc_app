@@ -21,7 +21,13 @@
   <a-form-item
     name="code"
     :rules="[
-      { required: true, min: 4, message: '验证码有误', whitespace: true },
+      {
+        required: true,
+        min: 6,
+        max: 6,
+        message: '验证码有误',
+        whitespace: true,
+      },
     ]">
     <a-flex justify="space-between">
       <a-input
