@@ -69,6 +69,8 @@ export const useUserStore = defineStore('user', {
     },
 
     async register(data: RegisterUser) {
+      // @ts-ignore
+      delete data.checkPass;
       this.setData(await userRegister(data));
     },
 
@@ -78,7 +80,7 @@ export const useUserStore = defineStore('user', {
     },
 
     async destory() {
-      await userDestory(this.uid, this.phoneNumber);
+      await userDestory(this.account, this.phoneNumber);
       this.initData();
     },
 
