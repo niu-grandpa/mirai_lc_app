@@ -96,7 +96,7 @@
               block
               type="primary"
               html-type="submit"
-              class="login-form-button">
+              :loading="commonStore.loading">
               确定
             </a-button>
           </a-form-item>
