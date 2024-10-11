@@ -1,11 +1,10 @@
 <template>
   <section class="left" v-show="store.visible">
-    <div
-      v-for="(comp, key) in COMPONENT_MAP"
-      v-show="key === $props.activeKey"
-      :key="key">
-      <component :is="comp" />
-    </div>
+    <template v-for="(comp, key) in COMPONENT_MAP" :key="key">
+      <div v-show="key === $props.activeKey">
+        <component :is="comp" />
+      </div>
+    </template>
   </section>
 </template>
 
