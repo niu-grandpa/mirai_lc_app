@@ -7,13 +7,13 @@ import { useDB } from 'database';
 
 export class WorkDataController {
   getAll = async (
-    req: IReqQuery<{ uid: string }>,
+    req: IReqQuery<{ account: string }>,
     res: IRes
   ): Promise<IRes> => {
     try {
       const [data] = await useDB<WorkDataModel>(
-        `SELECT * FROM ${TB_NAME.WORK_DATA} WHERE userId = (?)`,
-        [req.query.uid]
+        `SELECT * FROM ${TB_NAME.WORK_DATA} WHERE account = (?)`,
+        [req.query.account]
       );
       data.saveTime = Number(data.saveTime);
       return sendResponse(res, HttpStatusCodes.OK, data);
@@ -24,12 +24,12 @@ export class WorkDataController {
 
   syncData = async (req: IReq<SyncWorkDataReq>, res: IRes): Promise<IRes> => {
     try {
-      const { uid, data, saveTime } = req.body;
+      const { account, data, saveTime } = req.body;
       await useDB(
-        `INSERT INTO ${TB_NAME.WORK_DATA} (userId, data, saveTime) VALUES (?,?,?) 
+        `INSERT INTO ${TB_NAME.WORK_DATA} (account, data, saveTime) VALUES (?,?,?) 
          ON DUPLICATE KEY 
             UPDATE data = VALUES(data), saveTime = VALUES(saveTime)`,
-        [uid, data, String(saveTime)]
+        [account, data, String(saveTime)]
       );
       return sendResponse(res, HttpStatusCodes.OK);
     } catch (e) {

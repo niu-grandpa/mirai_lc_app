@@ -9,17 +9,17 @@ export interface GetWorkDataRep {
 }
 
 export type SyncWorkDataReq = {
-  uid: number;
+  account: number;
   saveTime: number;
   data: FolderANode[];
 };
 
-export const getWorkData = async (uid: number): Promise<GetWorkDataRep> => {
+export const getWorkData = async (account: number): Promise<GetWorkDataRep> => {
   const { data } = await request<GetWorkDataRep>({
     method: 'GET',
     url: '/work-data/all',
     data: {
-      params: { uid },
+      params: { account },
     },
   });
   return data;

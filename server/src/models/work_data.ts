@@ -10,5 +10,5 @@ export interface WorkDataModel {
 export interface SyncWorkDataReq extends IReqHeaders {
   saveTime: number;
   data: string;
-  uid: number;
+  account: number;
 }
