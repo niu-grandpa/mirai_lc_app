@@ -1,7 +1,7 @@
 <template>
   <a-card class="container" :bordered="false">
     <template #title>
-      项目导出
+      项目源导出
       <a-tooltip>
         <template #title>为降低服务器压力，每次只能导出一个。</template>
         <InfoCircleOutlined />
@@ -19,7 +19,7 @@
           </a-menu>
         </template>
         <a-button size="small">
-          导出类型
+          导出选择
           <DownOutlined />
         </a-button>
       </a-dropdown>
@@ -43,7 +43,7 @@ import { DOWNLOAD_FILE_TYPE } from '@/share/enums';
 import { useNodeManagerStore } from '@/stores/nodeManagerStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { message, type CheckboxOptionType } from 'ant-design-vue';
-import { onBeforeMount, ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 
 const workspaceStore = useWorkspaceStore();
 const nodeManagerStore = useNodeManagerStore();
@@ -51,7 +51,7 @@ const nodeManagerStore = useNodeManagerStore();
 const checked = ref<string[]>([]);
 const options = ref<CheckboxOptionType[]>([]);
 
-onBeforeMount(() => {
+watchEffect(() => {
   options.value = workspaceStore.workData.map(({ name, key }) => ({
     label: name,
     value: key,
@@ -66,7 +66,7 @@ const onCheckBoxChange = (value: string[]) => {
 const onDownload = (e: any) => {
   const [nodeKey] = checked.value;
   if (!nodeKey) {
-    message.info('请选择选择要导出的项目');
+    message.info('请勾选要导出的项目');
     return;
   }
   nodeManagerStore.exportToFile(e.key, nodeKey, true);
