@@ -49,6 +49,8 @@
         </a-button>
       </a-form-item>
     </a-form>
+
+    <router-link to="/user/login">切换登录</router-link>
   </Layout>
 </template>
 
