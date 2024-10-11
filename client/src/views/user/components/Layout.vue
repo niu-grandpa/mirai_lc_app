@@ -6,30 +6,30 @@
         <span class="title">Mirai Design</span>
       </a-typography-title>
     </a-typography-link>
-    <a-typography-text type="secondary" style="margin-bottom: 40px">
+    <span class="subtitle" style="margin-bottom: 40px">
       开启高效设计的新篇章，让创意与实现无缝对接
-    </a-typography-text>
+    </span>
 
     <div class="form-box">
       <slot />
     </div>
+  </a-flex>
 
-    <a-flex class="footer" vertical justify="center" align="center">
-      <a-flex :gap="42">
-        <a class="extra-link">帮助</a>
-        <a class="extra-link">隐私</a>
-        <a class="extra-link">条款</a>
-      </a-flex>
-      <p class="copyright">
-        Copyright © 2024
-        <a
-          style="color: #000000a6"
-          href="https://github.com/niu-grandpa"
-          target="__blank">
-          <GithubOutlined />&nbsp;niu-grandpa
-        </a>
-      </p>
+  <a-flex class="footer" vertical justify="center" align="center">
+    <a-flex :gap="42">
+      <a class="extra-link">帮助</a>
+      <a class="extra-link">隐私</a>
+      <a class="extra-link">条款</a>
     </a-flex>
+    <p class="copyright">
+      Copyright © {{ new Date().getFullYear() }}&nbsp;
+      <a
+        style="color: #ffffff"
+        href="https://github.com/niu-grandpa"
+        target="__blank">
+        <GithubOutlined />&nbsp;niu-grandpa
+      </a>
+    </p>
   </a-flex>
 </template>
 
@@ -43,8 +43,9 @@ const boxStyle: CSSProperties = {
   height: '100vh',
   background: `url(${background})`,
   backgroundSize: '100%',
-  backgroundPosition: 'center 110px',
+  backgroundColor: '#141414',
   backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'center 110px',
 };
 </script>
 
@@ -59,20 +60,23 @@ const boxStyle: CSSProperties = {
   position: relative;
   top: 4px;
 }
+.subtitle {
+  color: #ffffff;
+}
 .form-box {
   width: 367px;
 }
 .footer {
   width: 100%;
-  position: relative;
-  top: 84px;
+  position: absolute;
+  bottom: 0;
   .extra-link {
-    color: #000000a6;
+    color: #ffffff;
   }
   .copyright {
     margin-top: 10px;
     font-size: 14px;
-    color: #000000a6;
+    color: #ffffff;
   }
 }
 </style>
