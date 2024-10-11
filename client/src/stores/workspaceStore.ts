@@ -49,7 +49,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       let value: FolderANode[] = localData.data;
 
       if (this.userStore.isVip) {
-        const coludData = await getWorkData(this.userStore.uid);
+        const coludData = await getWorkData(this.userStore.account);
         // 如果云端数据比本地的新，则更新本地数据
         if (coludData.saveTime > localData.saveTime) {
           value = coludData.data;
@@ -81,7 +81,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
 
       const params: SyncWorkDataReq = {
-        uid: this.userStore.uid,
+        account: this.userStore.account,
         saveTime: Date.now(),
         data: this.workData,
       };
