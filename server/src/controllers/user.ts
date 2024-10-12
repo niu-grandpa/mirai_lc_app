@@ -25,14 +25,13 @@ const initUserAccount = 1003640870;
 
 class UserController {
   private _validatePass(password: string): boolean {
-    return !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,}$/.test(
+    return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,}$/.test(
       password
     );
   }
 
   register = async (req: IReq<RegisterUser>, res: IRes): Promise<IRes> => {
     try {
-      req.body.password = await encryptByBcrypt(req.body.password);
       const { code, nickname, password, phoneNumber } = req.body;
 
       if (!this._isValidPhoneNumber(phoneNumber)) {
@@ -67,12 +66,13 @@ class UserController {
         );
       }
 
-      const account = this._genUserAccount();
+      const account = await this._createAccount();
+      const hasPassword = await encryptByBcrypt(password);
       const token = signJwtToken({ phoneNumber, account });
 
       await useDB(
-        `INSERT INTO ${TB_NAME.USER} (token, nickname, account, password, phoneNumber) VALUES(?,?,?,?)`,
-        [token, nickname, account, password, phoneNumber]
+        `INSERT INTO ${TB_NAME.USER} (token, nickname, account, password, phoneNumber) VALUES(?,?,?,?,?)`,
+        [token, nickname, account, hasPassword, phoneNumber]
       );
 
       const user = await this._getUserByToken(token);
@@ -129,9 +129,6 @@ class UserController {
           if (!user) {
             resp = RequestErrText.NOT_USERS;
             statusCode = HttpStatusCodes.BAD_REQUEST;
-          } else if (user.isLogin) {
-            resp = RequestErrText.REPEAT_LOGIN;
-            statusCode = HttpStatusCodes.BAD_REQUEST;
           } else if (await verifyByBcrypt(password, user.password)) {
             const newToken = signJwtToken({ phoneNumber });
             await this._updateUserTokenAndLoginStatus(user.password, newToken);
@@ -147,9 +144,6 @@ class UserController {
         if (!user) {
           resp = RequestErrText.NOT_USERS;
           statusCode = HttpStatusCodes.UNAUTHORIZED;
-        } else if (user.isLogin) {
-          resp = RequestErrText.REPEAT_LOGIN;
-          statusCode = HttpStatusCodes.BAD_REQUEST;
         } else {
           await this._updateUserLoginStatus(authorization, true);
           resp = user;
@@ -250,9 +244,11 @@ class UserController {
     }
   };
 
-  private async _genUserAccount(): Promise<string> {
-    const [res] = await useDB<number>(`SELECT MAX(id) FROM ${TB_NAME.ACCOUNT}`);
-    return `${initUserAccount + (res ?? 1)}`;
+  private async _createAccount(): Promise<string> {
+    const [res] = await useDB<{ 'MAX(id)': number }>(
+      `SELECT MAX(id) FROM ${TB_NAME.ACCOUNT}`
+    );
+    return `${initUserAccount + (res['MAX(id)'] ?? 1)}`;
   }
 
   private async _checkVerificationCode(
