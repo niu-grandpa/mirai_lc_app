@@ -14,6 +14,7 @@ export default function createTable() {
   const promises = [
     useDB(readSqlFile(TB_NAME.USER)),
     useDB(readSqlFile(TB_NAME.DOWNLOAD)),
+    useDB(readSqlFile(TB_NAME.ACCOUNT)),
     useDB(readSqlFile(TB_NAME.WORK_DATA)),
     useDB(readSqlFile(TB_NAME.VEFIF_CODE)),
   ];
