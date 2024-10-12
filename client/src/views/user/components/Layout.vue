@@ -3,11 +3,11 @@
     <a-typography-link href="/">
       <a-typography-title :level="2">
         <img :src="logo" class="logo" alt="logo" />
-        <span class="title">Mirai Design</span>
+        <span class="title">Visual Web Design</span>
       </a-typography-title>
     </a-typography-link>
     <span class="subtitle" style="margin-bottom: 40px">
-      开启高效设计的新篇章，让创意与实现无缝对接
+      开启高效可视化设计的新篇章，让创意与实现无缝对接
     </span>
 
     <div class="form-box">
