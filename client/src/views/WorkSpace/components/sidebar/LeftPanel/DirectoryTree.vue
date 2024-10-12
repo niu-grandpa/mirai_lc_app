@@ -61,7 +61,7 @@
                 :key="k"
                 v-for="(v, k) in ANodeActionTitles"
                 :danger="k === ANODE_ACTION_KEY.DELETE"
-                :style="{ display: isCtxOptHidden(k) ? 'none' : '' }"
+                :style="{ display: getIsRtOptDisplay(k) ? 'none' : '' }"
                 :disabled="
                   k === ANODE_ACTION_KEY.PASTE && !cloneNodeKeys.keys.length
                 ">
@@ -126,6 +126,7 @@ import {
   reactive,
   ref,
   watch,
+  watchEffect,
 } from 'vue';
 
 const workspaceStore = useWorkspaceStore();
@@ -134,10 +135,17 @@ const nodeManagerStore = useNodeManagerStore();
 const searchValue = ref('');
 const currentNodeKey = ref('');
 const currentNodeName = ref('');
-const showCreate = ref(true);
-const showPaste = ref(true);
-const showImport = ref(true);
-const showDownload = ref(true);
+
+const rtOptVisbile = reactive({
+  del: true,
+  cut: true,
+  paste: true,
+  create: true,
+  import: true,
+  download: true,
+  rename: true,
+});
+
 const showDelPrompt = ref(false);
 const autoExpandParent = ref(false);
 const expandedKeys = ref<string[]>([]);
@@ -161,7 +169,9 @@ onBeforeUnmount(() => {
 
 onBeforeMount(() => {
   showDelPrompt.value = getLocalItem('showDelPrompt');
-  expandedKeys.value = nodeManagerStore.expandedKeys;
+  setTimeout(() => {
+    expandedKeys.value = nodeManagerStore.expandedKeys;
+  }, 0);
 });
 
 watch(
@@ -196,15 +206,18 @@ const onUploadAndAddTreeNode = async () => {
   }
 };
 
-const isCtxOptHidden = (k: ANODE_ACTION_KEY) => {
+const getIsRtOptDisplay = (k: ANODE_ACTION_KEY): boolean => {
   return (
-    (k === ANODE_ACTION_KEY.PASTE && !showPaste.value) ||
-    (k === ANODE_ACTION_KEY.IMPORT && !showImport.value) ||
-    (k === ANODE_ACTION_KEY.DOWNLOAD && !showDownload.value) ||
+    (k === ANODE_ACTION_KEY.CUT && !rtOptVisbile.cut) ||
+    (k === ANODE_ACTION_KEY.DELETE && !rtOptVisbile.del) ||
+    (k === ANODE_ACTION_KEY.PASTE && !rtOptVisbile.paste) ||
+    (k === ANODE_ACTION_KEY.RENAME && !rtOptVisbile.rename) ||
+    (k === ANODE_ACTION_KEY.IMPORT && !rtOptVisbile.import) ||
+    (k === ANODE_ACTION_KEY.DOWNLOAD && !rtOptVisbile.download) ||
     ([ANODE_ACTION_KEY.CREATE_FOLDER, ANODE_ACTION_KEY.CREATE_FILE].includes(
       k
     ) &&
-      !showCreate.value)
+      !rtOptVisbile.create)
   );
 };
 
@@ -222,10 +235,15 @@ const onRightClick = ({
 }) => {
   event.stopPropagation();
   const hidden = !node.isRoot && !node.isLeaf;
-  showCreate.value = hidden;
-  showPaste.value = hidden;
-  showImport.value = hidden;
-  showDownload.value = node.isFile;
+  // @ts-ignore
+  const hidden2 = node.name !== 'src' && node.pos !== '0-0-0';
+  rtOptVisbile.del = hidden2;
+  rtOptVisbile.cut = hidden2;
+  rtOptVisbile.rename = hidden2;
+  rtOptVisbile.create = hidden;
+  rtOptVisbile.paste = hidden;
+  rtOptVisbile.import = hidden;
+  rtOptVisbile.download = node.isFile;
 };
 
 const onCtxMenuClick = (
