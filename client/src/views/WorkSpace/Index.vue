@@ -35,8 +35,11 @@ const initData = async () => {
     workspaceStore.updateOpenedFilesByKeys('add', [
       ...workspaceStore.openedFileKeys,
     ]);
-  } finally {
+
     setTimeout(hide, 1000);
+  } catch {
+    message.error('网络错误');
+    hide();
   }
 };
 
