@@ -19,7 +19,7 @@
           </a-menu>
         </template>
         <a-button size="small">
-          导出选择
+          选择类型
           <DownOutlined />
         </a-button>
       </a-dropdown>
