@@ -22,20 +22,20 @@
           <template #content>
             <template v-if="!userStore.account">
               <a-button type="text" @click="hide('/user/login')">
-                用户登录
+                登录
               </a-button>
               <div />
               <a-button type="text" @click="hide('/user/register')">
-                注册
+                账户注册
               </a-button>
             </template>
 
             <template v-else>
               <a-button type="text" @click="hide('/user')">个人中心</a-button>
               <div />
-              <a-button type="text">退出登陆</a-button>
+              <a-button type="text" @click="onLogout">退出登陆</a-button>
               <div />
-              <a-button type="text" danger>注销</a-button>
+              <a-button type="text" danger>注销账户</a-button>
             </template>
           </template>
 
@@ -59,6 +59,7 @@
 <script setup lang="ts">
 import sidebarConfig, { SIDEBAR_OPTIONS } from '@/config/sidebar';
 import { useUserStore } from '@/stores/userStore';
+import { message, Modal } from 'ant-design-vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -85,6 +86,17 @@ const handleToogle = (key: SIDEBAR_OPTIONS) => {
     item.active = item.key === key;
   });
   emits('toogle', key);
+};
+
+const onLogout = async () => {
+  Modal.confirm({
+    title: '确定要退出登录吗？',
+    content: '提示：会员用户退出登录后无法继续在线同步数据',
+    async onOk() {
+      await userStore.logout();
+      message.success('已退出登录');
+    },
+  });
 };
 </script>
 
