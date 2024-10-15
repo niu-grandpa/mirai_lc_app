@@ -1,16 +1,16 @@
 <p align="center">
-  <a href="https://mirai-design.vercel.app/">
+  <a href="https://visual-web-design.vercel.app/">
     <img width="200" src="./client/public/logo.svg">
   </a>
 </p>
 
 <h1 align="center">
-  <a href="https://www.antdv.com/" target="_blank">Mirai Design</a>
+  <a href="https://www.antdv.com/" target="_blank">Visual Web Design</a>
 </h1>
 
 <div align="center">
 
-一款全新便捷的前端低代码 UI 设计平台，旨在提升产品原型设计的效率与质量。无论是产品经理还是开发者，都能轻松使用此平台快速搭建高质量的用户界面。
+一款全新便捷的可视化Web前端界面设计平台，旨在提升产品原型设计的效率与质量。无论是产品经理还是开发者，都能轻松使用此平台快速搭建高质量的用户界面。
 
 </div>
 
@@ -32,7 +32,7 @@
 
 UI 组件搭建：为开发者提供一个高效的工具，简化界面搭建过程。
 
-🚀 选择这款前端低代码 UI 设计平台，开启高效设计的新篇章，让创意与实现无缝对接！
+🚀 选择这款前端界面设计平台，开启高效设计的新篇章，让创意与实现无缝对接！
 
 ## ✨ 特性
 
