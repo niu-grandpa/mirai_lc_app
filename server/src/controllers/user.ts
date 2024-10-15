@@ -1,5 +1,4 @@
 import {
-  GenANodeKey,
   RegisterUser,
   UpdateUserProfile,
   UserLogin,
@@ -19,7 +18,7 @@ import TB_NAME from 'constants/db_table_name';
 import HttpStatusCodes from 'constants/http_status_codes';
 import RequestErrText from 'constants/request_error_text';
 import { useDB } from 'database';
-import { customAlphabet, nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 
 const initUserAccount = 1003640870;
 
@@ -208,16 +207,6 @@ class UserController {
         [avatar, nickname, uid]
       );
       return sendResponse(res, HttpStatusCodes.OK);
-    } catch (e) {
-      throw handleReqError(e);
-    }
-  };
-
-  genANodeKey = async (req: IReq<GenANodeKey>, res: IRes): Promise<IRes> => {
-    try {
-      const { suffix } = req.body;
-      const key = `v${nanoid()}${suffix ?? ''}`;
-      return sendResponse(res, HttpStatusCodes.OK, key);
     } catch (e) {
       throw handleReqError(e);
     }
