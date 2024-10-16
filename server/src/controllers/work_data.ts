@@ -4,8 +4,9 @@ import { handleReqError, sendResponse } from '@util/misc';
 import TB_NAME from 'constants/db_table_name';
 import HttpStatusCodes from 'constants/http_status_codes';
 import { useDB } from 'database';
+import TreeDataOptionsController from './tree_data';
 
-export class WorkDataController {
+export class WorkDataController extends TreeDataOptionsController {
   getAll = async (
     req: IReqQuery<{ account: string }>,
     res: IRes
