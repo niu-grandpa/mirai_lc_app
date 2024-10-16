@@ -1,5 +1,12 @@
 import { downloadFile, downloadProject } from '@/api/download';
 import { readWorkFile } from '@/api/upload';
+import {
+  createComponentNode,
+  CreateComponentNodeReq,
+  createFileNode,
+  createFolderNode,
+  type CreateFolderNodeReq,
+} from '@/api/workData';
 import commonConfig from '@/config/common';
 import { useTreeManager } from '@/hooks';
 import { getLocalItem, setLocalItem } from '@/share';
@@ -102,6 +109,18 @@ export const useNodeManagerStore = defineStore('nodeManager', {
     async importWorkFile(file: File, key: string) {
       const data = await readWorkFile(file);
       this.workspaceStore.addNode(key, data);
+    },
+
+    async createFolder(data: CreateFolderNodeReq) {
+      return await createFolderNode(data);
+    },
+
+    async createFile(name: string) {
+      return await createFileNode(name);
+    },
+
+    async createComponent(data: CreateComponentNodeReq) {
+      return await createComponentNode(data);
     },
   },
 });
