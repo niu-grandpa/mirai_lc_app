@@ -3,11 +3,11 @@ import axios from 'axios';
 import logger from 'jet-logger';
 import mockData from '../static/mock_data.json';
 
-describe('work-data接口测试', () => {
-  // 先运行user_api测试后从user表任取一个uid和token
-  const uid = 1;
+describe('work-data接口', () => {
+  // 先运行user_api测试后从user表任取一个account和token
+  const account = 1003640871;
   const userToken =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6IjEzMDIyMjIyMjIyIiwiaWF0IjoxNzI3MTcyMjM5LCJleHAiOjE3MjcyNTg2Mzl9.C6FhZzincDP-k61ikYtvTgfHUwtWMM5R_pq7x3Y9WcA';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwaG9uZU51bWJlciI6IjE1MzAyNTQxMzk2IiwiYWNjb3VudCI6IjEwMDM2NDA4NzEiLCJpYXQiOjE3Mjg3MzYzMDMsImV4cCI6MTcyODgyMjcwM30.4uOSYLjwIgHQTrGp0d3xUx3diXfLUfbooTBkRFYjovI';
 
   it('PUT /api/work-data/sync 应返回状态码200', async () => {
     try {
@@ -15,7 +15,7 @@ describe('work-data接口测试', () => {
         'http://localhost:8000/api/v1/work-data/sync',
         {
           headers: { Authorization: userToken },
-          uid,
+          account,
           saveTime: Date.now(),
           data: mockData,
         }
@@ -32,11 +32,54 @@ describe('work-data接口测试', () => {
       'http://localhost:8000/api/v1/work-data/all',
       {
         headers: { Authorization: userToken },
-        params: { uid },
+        params: { account },
       }
     );
 
     expect(response.status).toBe(200);
     expect(response.data.data.data).toEqual(mockData);
+  });
+
+  it('POST /api/work-data/create-folder', async () => {
+    const response = await axios.post(
+      'http://localhost:8000/api/v1/work-data/create-folder',
+      {
+        name: 'A',
+        isRoot: true,
+      }
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it('POST /api/work-data/create-file', async () => {
+    const response = await axios.post(
+      'http://localhost:8000/api/v1/work-data/create-file',
+      {
+        name: 'A-a',
+      }
+    );
+    expect(response.status).toBe(200);
+  });
+
+  it('POST /api/work-data/create-component', async () => {
+    const response = await axios.post(
+      'http://localhost:8000/api/v1/work-data/create-component',
+      {
+        tagName: 'div',
+        x: 0,
+        y: 0,
+        textContent: 'some content...',
+        attributes: {
+          class: 'box',
+        },
+        eventBinding: {
+          click: {
+            fn: (() => {}).toString(),
+          },
+          touch: {},
+        },
+      }
+    );
+    expect(response.status).toBe(200);
   });
 });
