@@ -4,7 +4,9 @@ import { Router } from 'express';
 
 const router = Router();
 
+router.get('/node-id', controller.createNodeId);
 router.get('/all', authenticateUser, controller.getAll);
+
 router.put('/sync', authenticateUser, controller.syncData);
 
 router.post('/create-folder', controller.createFolderNode);
