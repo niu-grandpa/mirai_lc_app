@@ -1,7 +1,7 @@
 import { IReqHeaders } from '@/types/types';
 
 export interface WorkDataModel {
-  userId: number;
+  account: number;
   saveTime: number;
   data: string;
   created_at: string;
