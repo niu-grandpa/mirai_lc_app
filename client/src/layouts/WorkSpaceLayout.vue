@@ -1,7 +1,7 @@
 <template>
   <a-layout>
     <a-layout>
-      <a-layout-content>
+      <a-layout-content style="background: #24292e">
         <slot name="content" />
       </a-layout-content>
     </a-layout>
