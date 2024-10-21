@@ -24,7 +24,7 @@ const createRequest = () => {
     },
     err => {
       if (err.status !== 500) {
-        message.error(err.response.data?.data || '未知错误');
+        message.error(err.response?.data?.data || '未知错误');
       } else {
         message.error('服务器错误，请稍后再试。');
       }
