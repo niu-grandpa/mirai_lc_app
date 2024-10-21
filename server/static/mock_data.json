@@ -1,86 +1,56 @@
-{
-  "key": "zdkoDWdk_d1wea;fld",
-  "name": "demo",
-  "isRoot": true,
-  "isLeaf": false,
-  "isFolder": true,
-  "timestamp": 1723188651021,
-  "children": [
-    {
-      "key": "zYYfHhDg;fld",
-      "name": "src",
-      "isLeaf": false,
-      "isFolder": true,
-      "children": [
-        {
-          "key": "awdwad;fld",
-          "name": "view",
-          "isLeaf": false,
-          "isFolder": true,
-          "children": [
-            {
-              "isLeaf": true,
-              "isFile": true,
-              "key": "zV3w9KhJM",
-              "name": "Home",
-              "anodes": [
-                {
-                  "isLeaf": true,
-                  "key": "zFy_v0ROE",
-                  "name": "div",
-                  "isComp": false,
-                  "x": 10,
-                  "y": 20,
-                  "children": [],
-                  "textContent": "Example content",
-                  "attrs": {
-                    "class": {
-                      "aadas": true
-                    },
-                    "style": {
-                      "width": "120px",
-                      "height": "60px",
-                      "position": "absolute",
-                      "color": "#fff",
-                      "fontSize": "16px",
-                      "backgroundColor": "#29e"
-                    }
+[
+  {
+    "name": "app",
+    "isRoot": true,
+    "children": [
+      {
+        "name": "src",
+        "isRoot": false,
+        "children": [
+          {
+            "key": "njzdaycW41nrHr3DDtmFi6",
+            "rootKey": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
+            "name": "index",
+            "isFile": true,
+            "isLeaf": true,
+            "content": [
+              {
+                "x": 0,
+                "y": 0,
+                "tagName": "div",
+                "eventBinding": {
+                  "click": {
+                    "fn": "() => { }"
                   },
-                  "props": {},
-                  "directives": {},
-                  "on": {}
+                  "touch": {}
                 },
-                {
-                  "isLeaf": true,
-                  "key": "zm_op2jmq",
-                  "name": "div",
-                  "isComp": false,
-                  "x": 0,
-                  "y": 0,
-                  "children": [],
-                  "textContent": "Example content",
-                  "attrs": {
-                    "class": {
-                      "aadas": true
-                    },
-                    "style": {
-                      "width": "120px",
-                      "height": "60px",
-                      "position": "absolute",
-                      "color": "#fff",
-                      "fontSize": "16px",
-                      "backgroundColor": "#29e"
-                    }
+                "children": [],
+                "textContent": "some content...",
+                "key": "nHmGqwxPhEtzBN5nxa5C6k",
+                "rootKey": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
+                "attributes": {
+                  "style": {
+                    "position": "absolute",
+                    "transform": "translate(0px, 0px)"
                   },
-                  "props": {},
-                  "directives": {},
-                  "on": {}
+                  "class": {
+                    "box": true
+                  }
                 }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+              }
+            ]
+          }
+        ],
+        "isLeaf": false,
+        "isFolder": true,
+        "rootKey": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
+        "key": "n3DTIhapoZsPT881z19OAJ;fld"
+      }
+    ],
+    "isLeaf": false,
+    "isFolder": true,
+    "rootKey": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
+    "key": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
+    "createAt": "2024/10/16 14:27:34"
+  }
+]
