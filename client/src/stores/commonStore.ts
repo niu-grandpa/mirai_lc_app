@@ -1,9 +1,9 @@
 import commonConfig from '@/config/common';
-import { type UseDragAction, type UseDragTargetInfo } from '@/hooks/useDrag';
+import { type Drag1Action, type Drag1Info } from '@/share/workSpaceNodeUtils';
 import { defineStore } from 'pinia';
 
-export interface DragState extends UseDragTargetInfo {
-  action: UseDragAction;
+export interface DragState extends Drag1Info {
+  action: Drag1Action;
 }
 
 type Theme = 'dark' | 'light';
