@@ -12,54 +12,43 @@
 <script setup lang="ts">
 import config from '@/config/common';
 import { WorkSpaceLayout } from '@/layouts';
-import { useNodeManagerStore } from '@/stores/nodeManagerStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { message } from 'ant-design-vue';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { WorkspaceSidebar, WorkspaceVisual } from './components';
 
-const workspaceStore = useWorkspaceStore();
-const nodeManagerStore = useNodeManagerStore();
+const store = useWorkspaceStore();
 
 const timer = ref();
 
-const initData = async () => {
-  const hide = message.loading('同步数据中..', 0);
+onMounted(async () => {
+  const hide = message.loading('加载数据中..', 0);
   try {
-    await workspaceStore.initData();
+    const data = await store.getData();
 
-    nodeManagerStore.updateSelectedKeys();
-    nodeManagerStore.updateExpandedKeys();
-
-    workspaceStore.initOpenedFileKeys();
-    workspaceStore.updateOpenedFilesByKeys('add', [
-      ...workspaceStore.openedFileKeys,
-    ]);
+    store.updateWorkData(data);
+    store.setSelectedFileNodeKeys();
+    store.setExpandedFileNodeKeys();
+    store.initOpenedFileNodeKeys();
+    store.updateOpenedFileNodeByKeys('add', [...store.openedFileNodeKeys]);
 
     setTimeout(hide, 1000);
-  } catch {
-    message.error('网络错误');
+  } catch (e) {
+    console.log(e);
+    message.error('初始化数据错误');
     hide();
   }
-};
-
-const autoSyncData = () => {
-  if (!timer.value) {
-    timer.value = setInterval(
-      workspaceStore.updateWorkData,
-      config.autoSaveInterval
-    );
-  }
-};
-
-onMounted(initData);
+});
 
 watch(
-  () => workspaceStore.workData.length,
+  () => store.workData.length,
   len => {
-    if (len) {
-      autoSyncData();
+    if (len && !timer.value) {
       console.log('自动同步已开启');
+      timer.value = setInterval(() => {
+        store.updateWorkData();
+        console.log(`[${new Date().toLocaleString()}] 已保存当前数据`);
+      }, config.autoSaveInterval);
     }
   }
 );
@@ -67,6 +56,7 @@ watch(
 const onBeforeunload = (e: BeforeUnloadEvent) => {
   e.preventDefault();
   e.returnValue = true;
+  store.updateWorkData();
 };
 
 onMounted(() => {
