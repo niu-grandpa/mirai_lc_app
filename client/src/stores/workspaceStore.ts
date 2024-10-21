@@ -1,37 +1,43 @@
 import {
+  type FileConentNode,
+  type FileNode,
+  type FolderNode,
   getWorkData,
-  syncWorkData,
   type GetWorkDataRep,
+  syncWorkData,
   type SyncWorkDataReq,
+  WorkDataNodeType,
 } from '@/api/workData';
 import commonConfig from '@/config/common';
-import { type CreateANodeOptions } from '@/core/tree-manager/handler';
-import { useTreeManager } from '@/hooks';
 import { getLocalItem, setLocalItem } from '@/share';
-import {
-  type ElementANode,
-  type FileANode,
-  type FolderANode,
-  type TreeDataCommonType,
-} from '@/share/abstractNode';
+import { DOWNLOAD_FILE_TYPE, VISUAL_CLASS_NAME } from '@/share/enums';
+import workSpaceNodeUtils, {
+  type Drag1Callback,
+} from '@/share/workSpaceNodeUtils';
+import { type AntTreeNodeDropEvent } from 'ant-design-vue/es/tree';
 import { defineStore } from 'pinia';
 import { useCommonStore } from './commonStore';
 import { useUserStore } from './userStore';
 
 export interface WorkspaceState {
-  _workData: FolderANode[];
-  _openedFileKeys: Set<string>;
-  _openedFiles: Set<FileANode>;
+  /** 记录操作节点的轨迹，用于操作撤销或恢复 */
+  _track: [];
+  _workData: FolderNode[];
+  _selectedFileNodeKeys: string[];
+  _expandedFileNodeKeys: string[];
+  _openedFileNodeKeys: Set<string>;
+  _openedFiles: Set<FileNode>;
 }
-
-const treeManager = useTreeManager();
 
 const { storageKeys } = commonConfig;
 
 export const useWorkspaceStore = defineStore('workspace', {
   state: (): WorkspaceState => ({
+    _track: [],
     _workData: [],
-    _openedFileKeys: new Set(),
+    _selectedFileNodeKeys: [],
+    _expandedFileNodeKeys: [],
+    _openedFileNodeKeys: new Set(),
     _openedFiles: new Set(),
   }),
 
@@ -39,15 +45,17 @@ export const useWorkspaceStore = defineStore('workspace', {
     commonStore: () => useCommonStore(),
     userStore: () => useUserStore(),
     workData: state => state._workData,
-    openedFileKeys: state => state._openedFileKeys,
+    openedFileNodeKeys: state => state._openedFileNodeKeys,
     openedFiles: state => state._openedFiles,
+    selectedFileNodeKeys: state => state._selectedFileNodeKeys,
+    expandedFileNodeKeys: state => state._expandedFileNodeKeys,
   },
 
   actions: {
-    async initData(): Promise<FolderANode[]> {
+    async getData(): Promise<FolderNode[]> {
       const localData = getLocalItem<GetWorkDataRep>(storageKeys.WORK_DATA);
-      let value: FolderANode[] = localData.data;
 
+      let value: FolderNode[] = localData.data;
       if (this.userStore.isVip) {
         const coludData = await getWorkData(this.userStore.account);
         // 如果云端数据比本地的新，则更新本地数据
@@ -59,15 +67,12 @@ export const useWorkspaceStore = defineStore('workspace', {
         }
       }
 
-      value = treeManager.setData(value).sortNodes();
-      this.updateWorkData(value);
-      treeManager.freed();
-
+      workSpaceNodeUtils.sort(value as WorkDataNodeType[]);
       return value;
     },
 
     async updateWorkData(
-      data?: FolderANode[],
+      data?: FolderNode[],
       options: {
         saveToLocal?: boolean;
         saveToCould?: boolean;
@@ -94,63 +99,192 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
     },
 
-    findOneNode(key: string) {
-      const node = treeManager.setData(this.workData).findNode(key);
-      return node as FolderANode & FileANode & ElementANode;
+    queryNodeByKey<T>(rootKey: string, key: string | string[]): T[] {
+      const root = workSpaceNodeUtils.getRootNode(this.workData, rootKey);
+      return workSpaceNodeUtils.queryAllByKeys(
+        [root],
+        Array.isArray(key) ? key : [key]
+      ) as T[];
     },
 
-    findKeysByName(name: string): string[] {
-      return treeManager.setData(this.workData).findKeysByName(name);
-    },
+    queryKeysByName(name: string): string[] {
+      const result: string[] = [];
+      const stack = [...this.workData];
 
-    async createAndInsertNode(opts: CreateANodeOptions) {
-      await treeManager.setData(this.workData).createAndInsertNode(opts);
-    },
-
-    updateNode(key: string, value: object) {
-      treeManager.setData(this.workData).updateOneNode(key, value);
-    },
-
-    removeNode(key: string) {
-      treeManager.setData(this.workData).removeOneNode(key);
-      treeManager.freed();
-    },
-
-    addNode(key: string, node: TreeDataCommonType) {
-      treeManager.setData(this.workData).addOneNode(key, node);
-    },
-
-    initOpenedFileKeys() {
-      this._openedFileKeys = new Set(getLocalItem(storageKeys.OPENED_KEYS));
-      this.setOpenedFileKeys();
-    },
-
-    setOpenedFileKeys() {
-      setLocalItem(storageKeys.OPENED_KEYS, [...this.openedFileKeys]);
-    },
-
-    getOpenedFiles(): Set<FileANode> {
-      const list = new Set<FileANode>();
-      this.openedFileKeys.forEach(key => {
-        const node = this.findOneNode(key);
-        if (node && !node.isFolder) {
-          list.add(node);
+      while (stack.length) {
+        const item = stack.pop()! as WorkDataNodeType;
+        if (!item.isFolder && !item.isFile) {
+          continue;
         }
+        if (item.name.includes(name)) {
+          result.push(item.key); // 匹配成功则添加 key
+        }
+        if (item.children) {
+          // @ts-ignore
+          stack.push(...item.children); // 将子节点压入栈中
+        }
+      }
+
+      return result;
+    },
+
+    insertNode<T extends WorkDataNodeType>(node: T, target?: T) {
+      if (!target) {
+        this._workData.push(node as FolderNode);
+        workSpaceNodeUtils.sort(this.workData as WorkDataNodeType[]);
+      } else {
+        target.children.push(node);
+        workSpaceNodeUtils.sort(target.children, target.isFolder);
+      }
+    },
+
+    updateNode(target: string | WorkDataNodeType, value: object, rootKey = '') {
+      if (typeof target !== 'string') rootKey = target.rootKey;
+      const root = workSpaceNodeUtils.getRootNode(this.workData, rootKey);
+      workSpaceNodeUtils.updateOne([root], target, value);
+    },
+
+    removeNode(rootKey: string, key: string) {
+      const root = workSpaceNodeUtils.getRootNode(this.workData, rootKey);
+      if (root.key === key) {
+        workSpaceNodeUtils.removeRoot(this.workData, root);
+      } else {
+        workSpaceNodeUtils.removeOne([root], key);
+      }
+    },
+
+    /**用于画布区域的节点粘贴 */
+    async pasteComponentNode(options: {
+      mouseEv: MouseEvent;
+      targetKey: string;
+      nodeKeys: string[];
+      isCut?: boolean;
+    }) {
+      const { mouseEv, targetKey, nodeKeys, isCut } = options;
+
+      const wrapperRect = document
+        .querySelector(`.${VISUAL_CLASS_NAME}`)!
+        .getBoundingClientRect();
+
+      const x = mouseEv.clientX - wrapperRect.left;
+      const y = mouseEv.clientY - wrapperRect.top;
+
+      const [targetNode] = workSpaceNodeUtils.queryAllByKeys(this.workData, [
+        targetKey,
+      ]) as unknown as FileNode[];
+
+      let nodesToPaste = workSpaceNodeUtils.queryAllByKeys(
+        this.workData,
+        nodeKeys
+      ) as unknown as FileConentNode[];
+
+      if (!isCut) {
+        nodesToPaste = workSpaceNodeUtils.clone(nodesToPaste);
+        // @ts-ignore
+        await workSpaceNodeUtils.refreshKeys(nodesToPaste);
+      }
+
+      nodesToPaste.forEach(node => {
+        node.x = x;
+        node.y = y;
+        node.attributes.id = node.key;
+        node.attributes.style.transform = `translate(${x}px, ${y}px)`;
       });
+
+      targetNode.content.push(...nodesToPaste);
+    },
+
+    /**
+     * 用于侧边栏文件节点的粘贴
+     * 目标节点可以直接从Tree组件右键获取
+     */
+    async pasteFileNode<T extends WorkDataNodeType>(
+      target: T,
+      nodeKeys: string[],
+      isCut = false
+    ) {
+      let nodesToPaste = this.queryNodeByKey<WorkDataNodeType>(
+        target.rootKey,
+        nodeKeys
+      );
+
+      if (!isCut) {
+        nodesToPaste = workSpaceNodeUtils.clone(nodesToPaste);
+        await workSpaceNodeUtils.refreshKeys(nodesToPaste);
+      }
+
+      workSpaceNodeUtils.renameDuplicate(target.children, nodesToPaste);
+      target.children.push(...nodesToPaste);
+      workSpaceNodeUtils.sort(target.children);
+    },
+
+    /**用于侧边栏文件节点的拖拽 */
+    onDragFileNode(info: AntTreeNodeDropEvent) {
+      workSpaceNodeUtils.onDrag2(this.workData, info);
+    },
+
+    /**用于画布节点的拖拽*/
+    onDragComponentNode(list: FileConentNode[], callback: Drag1Callback) {
+      workSpaceNodeUtils.onDrag1(list, callback);
+    },
+
+    setSelectedFileNodeKeys(value?: string[]) {
+      const keys =
+        value ||
+        getLocalItem<string[]>(storageKeys.SELECTED_KEYS) ||
+        [...this.openedFileNodeKeys][0] ||
+        [];
+      this._selectedFileNodeKeys = keys;
+      setLocalItem(storageKeys.SELECTED_KEYS, keys);
+    },
+
+    setExpandedFileNodeKeys(value?: string[]) {
+      const _value = value || getLocalItem(storageKeys.EXPANED_KEYS) || [];
+      this._expandedFileNodeKeys = _value;
+      setLocalItem(storageKeys.EXPANED_KEYS, _value);
+    },
+
+    initOpenedFileNodeKeys() {
+      this._openedFileNodeKeys = new Set(getLocalItem(storageKeys.OPENED_KEYS));
+      this.setOpenedFileNodeKeys();
+    },
+
+    setOpenedFileNodeKeys() {
+      setLocalItem(storageKeys.OPENED_KEYS, [...this.openedFileNodeKeys]);
+    },
+
+    getOpenedFileNodes(): Set<FileNode> {
+      const list = new Set<FileNode>();
+
+      const nodes = workSpaceNodeUtils.queryAllByKeys(this.workData, [
+        ...this.openedFileNodeKeys,
+      ]) as unknown as FileNode[];
+
+      nodes.forEach(item => list.add(item));
+
       return list;
     },
 
-    updateOpenedFilesByKeys(method: 'add' | 'delete', key: string | string[]) {
+    updateOpenedFileNodeByKeys(
+      method: 'add' | 'delete',
+      key: string | string[]
+    ) {
       if (!key || !key.length) return;
       if (Array.isArray(key)) {
         key.forEach(k => {
-          this._openedFileKeys[method](k);
+          this._openedFileNodeKeys[method](k);
         });
       } else {
-        this._openedFileKeys[method](key);
+        this._openedFileNodeKeys[method](key);
       }
-      this._openedFiles = this.getOpenedFiles();
-      this.setOpenedFileKeys();
+      this._openedFiles = this.getOpenedFileNodes();
+      this.setOpenedFileNodeKeys();
     },
+
+    async import(file: File, key: string) {},
+
+    async export(type: DOWNLOAD_FILE_TYPE, data: FolderNode[]) {},
+
+    async exportSingle(type: DOWNLOAD_FILE_TYPE, node: WorkDataNodeType) {},
   },
 });
