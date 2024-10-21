@@ -9,9 +9,9 @@
     type="file"
     accept=".json"
     style="display: none"
-    @change="onUploadAndAddTreeNode" />
+    @change="onImportNodes" />
 
-  <section class="empty" v-if="!workspaceStore.workData.length">
+  <section class="empty" v-if="!store.workData.length">
     <a-button block :icon="h(UploadOutlined)" @click="fileInput?.click()">
       导入json
     </a-button>
@@ -20,8 +20,8 @@
       type="primary"
       block
       :icon="h(PlusOutlined)"
-      @click="onFirstCreate">
-      新建
+      @click="onCreateProjectBtnClick">
+      新建项目
     </a-button>
   </section>
 
@@ -31,14 +31,14 @@
       draggable
       block-node
       :height="maxHeight"
-      @drop="nodeManagerStore.dragNode"
+      @drop="store.onDragFileNode"
       @rightClick="onRightClick"
-      :tree-data="workspaceStore.workData"
+      :tree-data="store.workData"
       :field-names="{ title: 'name' }"
       @expand="autoExpandParent = false"
       v-model:expandedKeys="expandedKeys"
       :auto-expand-parent="autoExpandParent"
-      v-model:selectedKeys="nodeManagerStore._selectedKeys"
+      v-model:selectedKeys="store._selectedFileNodeKeys"
       :style="{ height: `${maxHeight}px`, overflow: 'auto' }">
       <template #switcherIcon="{ switcherCls }">
         <down-outlined :class="switcherCls" />
@@ -46,7 +46,7 @@
 
       <template #title="{ name, key: treeKey }">
         <a-dropdown :trigger="['contextmenu']">
-          <span v-if="name.includes(searchValue)" :title="name">
+          <span v-if="name?.includes(searchValue)" :title="name">
             {{ name.substring(0, name.indexOf(searchValue)) }}
             <span style="color: #f50">{{ searchValue }}</span>
             {{ name.substring(name.indexOf(searchValue) + searchValue.length) }}
@@ -56,14 +56,14 @@
           <template #overlay>
             <a-menu
               style="width: 120px"
-              @click="(item:any) => onCtxMenuClick(treeKey, item.key, name)">
+              @click="(item:any) => onCtxMenuClick(treeKey, item.key)">
               <a-menu-item
                 :key="k"
-                v-for="(v, k) in ANodeActionTitles"
-                :danger="k === ANODE_ACTION_KEY.DELETE"
+                v-for="(v, k) in NodeActionTitles"
+                :danger="k === NODE_ACTION_KEY.DELETE"
                 :style="{ display: getIsRtOptDisplay(k) ? 'none' : '' }"
                 :disabled="
-                  k === ANODE_ACTION_KEY.PASTE && !cloneNodeKeys.keys.length
+                  k === NODE_ACTION_KEY.PASTE && !cloneNodeInfo.keys.length
                 ">
                 {{ v }}
               </a-menu-item>
@@ -76,12 +76,12 @@
     <template #overlay>
       <a-menu
         style="width: 120px"
-        @click="(item:any) => onCtxMenuClick('', item.key, '')">
-        <a-menu-item :key="ANODE_ACTION_KEY.CREATE_PROJECT">
+        @click="(item:any) => onCtxMenuClick('', item.key)">
+        <a-menu-item :key="NODE_ACTION_KEY.CREATE_PROJECT">
           创建项目...
         </a-menu-item>
-        <a-menu-item :key="ANODE_ACTION_KEY.CREATE_FILE">
-          {{ ANodeActionTitles[ANODE_ACTION_KEY.CREATE_FILE] }}
+        <a-menu-item :key="NODE_ACTION_KEY.CREATE_FILE">
+          新建页面...
         </a-menu-item>
       </a-menu>
     </template>
@@ -93,31 +93,30 @@
     okText="确定"
     cancelText="取消"
     :closable="false"
-    :title="
-      ANodeActionTitles[
-        // @ts-ignore
-        ctxMenuKey
-      ]
-    "
-    @ok="onRenameOrCreateNode"
-    v-model:open="openRenameOrCreateModal">
-    <a-input v-model:value="currentNodeName" placeholder="起个名字吧..." />
+    @ok="onModalOk"
+    v-model:open="openModal">
+    <a-input v-model:value="inputNameVal" placeholder="请输入名称" />
   </a-modal>
 </template>
 
 <script setup lang="ts">
-import { FolderKeySuffix } from '@/core/tree-manager/share';
-import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
-import { FolderANode, type FileANode } from '@/share/abstractNode';
 import {
-  ANODE_ACTION_KEY,
-  ANodeActionTitles,
+  createFileNode,
+  createFolderNode,
+  type WorkDataNodeType,
+  type FileNode,
+  type FolderNode,
+} from '@/api/workData';
+import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
+import {
+  NODE_ACTION_KEY,
+  NodeActionTitles,
   DOWNLOAD_FILE_TYPE,
 } from '@/share/enums';
-import { useNodeManagerStore } from '@/stores/nodeManagerStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import { Checkbox, message, Modal } from 'ant-design-vue';
+import { type EventDataNode } from 'ant-design-vue/es/tree';
 import {
   h,
   onBeforeMount,
@@ -126,15 +125,9 @@ import {
   reactive,
   ref,
   watch,
-  watchEffect,
 } from 'vue';
 
-const workspaceStore = useWorkspaceStore();
-const nodeManagerStore = useNodeManagerStore();
-
-const searchValue = ref('');
-const currentNodeKey = ref('');
-const currentNodeName = ref('');
+const store = useWorkspaceStore();
 
 const rtOptVisbile = reactive({
   del: true,
@@ -146,20 +139,32 @@ const rtOptVisbile = reactive({
   rename: true,
 });
 
-const showDelPrompt = ref(false);
-const autoExpandParent = ref(false);
-const expandedKeys = ref<string[]>([]);
-const ctxMenuKey = ref<ANODE_ACTION_KEY>();
-const openRenameOrCreateModal = ref(false);
-const maxHeight = ref(getWinHeight() - 58);
-const fileInput = ref<HTMLInputElement>();
-const cloneNodeKeys = reactive<{ keys: string[]; type: 'copy' | 'cut' }>({
+const cloneNodeInfo = reactive<{ keys: string[]; type: 'copy' | 'cut' }>({
   keys: [],
   type: 'copy',
 });
 
+const maxHeight = ref(getWinHeight() - 58);
+const fileInput = ref<HTMLInputElement>();
+
+const showDelPrompt = ref(false);
+const openModal = ref(false);
+const autoExpandParent = ref(false);
+
+const searchValue = ref('');
+const inputNameVal = ref('');
+const expandedKeys = ref<string[]>([]);
+const ctxMenuKey = ref<NODE_ACTION_KEY>();
+const obtainedNode = ref<WorkDataNodeType>();
+
 const setTreeMaxHeight = () => (maxHeight.value = getWinHeight() - 58);
 
+onBeforeMount(() => {
+  showDelPrompt.value = getLocalItem('showDelPrompt');
+  setTimeout(() => {
+    expandedKeys.value = store.expandedFileNodeKeys;
+  }, 0);
+});
 onMounted(() => {
   window.addEventListener('resize', setTreeMaxHeight);
 });
@@ -167,35 +172,29 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', setTreeMaxHeight);
 });
 
-onBeforeMount(() => {
-  showDelPrompt.value = getLocalItem('showDelPrompt');
-  setTimeout(() => {
-    expandedKeys.value = nodeManagerStore.expandedKeys;
-  }, 0);
-});
-
 watch(
   () => expandedKeys.value,
   newVal => {
-    const val = newVal.filter(item => item?.endsWith(FolderKeySuffix));
-    nodeManagerStore.updateExpandedKeys(val);
+    const val = newVal.filter(item => item?.endsWith(';fld'));
+    store.setExpandedFileNodeKeys(val);
   }
 );
 
 const onSearch = (value: string) => {
-  const expanded = workspaceStore.findKeysByName(value);
-  nodeManagerStore.updateExpandedKeys(expanded);
+  const expanded = store.queryKeysByName(value);
   searchValue.value = value;
+  expandedKeys.value = expanded;
   autoExpandParent.value = true;
+  store.setExpandedFileNodeKeys(expanded);
 };
 
 watch(() => searchValue.value, onSearch);
 
-const onUploadAndAddTreeNode = async () => {
+const onImportNodes = async () => {
   const fs = fileInput.value?.files;
   if (fs?.length) {
     try {
-      await nodeManagerStore.importWorkFile(fs[0], currentNodeKey.value);
+      await store.import(fs[0], obtainedNode.value!.key);
     } catch (e: Error) {
       message.error(
         e.message ?? '无法识别文件内容，请确保数据格式符合既定标准'
@@ -206,37 +205,33 @@ const onUploadAndAddTreeNode = async () => {
   }
 };
 
-const getIsRtOptDisplay = (k: ANODE_ACTION_KEY): boolean => {
+const getIsRtOptDisplay = (k: NODE_ACTION_KEY): boolean => {
   return (
-    (k === ANODE_ACTION_KEY.CUT && !rtOptVisbile.cut) ||
-    (k === ANODE_ACTION_KEY.DELETE && !rtOptVisbile.del) ||
-    (k === ANODE_ACTION_KEY.PASTE && !rtOptVisbile.paste) ||
-    (k === ANODE_ACTION_KEY.RENAME && !rtOptVisbile.rename) ||
-    (k === ANODE_ACTION_KEY.IMPORT && !rtOptVisbile.import) ||
-    (k === ANODE_ACTION_KEY.DOWNLOAD && !rtOptVisbile.download) ||
-    ([ANODE_ACTION_KEY.CREATE_FOLDER, ANODE_ACTION_KEY.CREATE_FILE].includes(
-      k
-    ) &&
+    (k === NODE_ACTION_KEY.CUT && !rtOptVisbile.cut) ||
+    (k === NODE_ACTION_KEY.DELETE && !rtOptVisbile.del) ||
+    (k === NODE_ACTION_KEY.PASTE && !rtOptVisbile.paste) ||
+    (k === NODE_ACTION_KEY.RENAME && !rtOptVisbile.rename) ||
+    (k === NODE_ACTION_KEY.IMPORT && !rtOptVisbile.import) ||
+    (k === NODE_ACTION_KEY.DOWNLOAD && !rtOptVisbile.download) ||
+    ([NODE_ACTION_KEY.CREATE_FOLDER, NODE_ACTION_KEY.CREATE_FILE].includes(k) &&
       !rtOptVisbile.create)
   );
 };
 
-const onFirstCreate = () => {
-  ctxMenuKey.value = ANODE_ACTION_KEY.CREATE_PROJECT;
-  openCreateModal();
+const onCreateProjectBtnClick = () => {
+  ctxMenuKey.value = NODE_ACTION_KEY.CREATE_PROJECT;
+  onOpenModal();
 };
 
-const onRightClick = ({
-  event,
-  node,
-}: {
-  event: any;
-  node: FolderANode & FileANode;
-}) => {
+const onRightClick = ({ event, node }: { event: any; node: EventDataNode }) => {
   event.stopPropagation();
+  obtainedNode.value = node.dataRef! as WorkDataNodeType;
+
+  // @ts-ignore
   const hidden = !node.isRoot && !node.isLeaf;
   // @ts-ignore
   const hidden2 = node.name !== 'src' && node.pos !== '0-0-0';
+
   rtOptVisbile.del = hidden2;
   rtOptVisbile.cut = hidden2;
   rtOptVisbile.rename = hidden2;
@@ -246,114 +241,116 @@ const onRightClick = ({
   rtOptVisbile.download = node.isFile;
 };
 
-const onCtxMenuClick = (
-  key: string,
-  menuKey: ANODE_ACTION_KEY,
-  name: string
-) => {
-  const keys = nodeManagerStore.selectedKeys.includes(key)
-    ? nodeManagerStore.selectedKeys
+const onCtxMenuClick = (key: string, menuKey: NODE_ACTION_KEY) => {
+  const keys = store.selectedFileNodeKeys.includes(key)
+    ? store.selectedFileNodeKeys
     : [key];
+
   const actions = {
-    [ANODE_ACTION_KEY.CREATE_PROJECT]: openCreateModal,
-    [ANODE_ACTION_KEY.CREATE_FOLDER]: openCreateModal,
-    [ANODE_ACTION_KEY.CREATE_FILE]: openCreateModal,
-    [ANODE_ACTION_KEY.COPY]: () => setCloneNodeKeys('copy', keys),
-    [ANODE_ACTION_KEY.CUT]: () => setCloneNodeKeys('cut', keys),
-    [ANODE_ACTION_KEY.PASTE]: pasteNode,
-    [ANODE_ACTION_KEY.IMPORT]: () => {
+    [NODE_ACTION_KEY.CREATE_PROJECT]: onOpenModal,
+    [NODE_ACTION_KEY.CREATE_FOLDER]: onOpenModal,
+    [NODE_ACTION_KEY.CREATE_FILE]: onOpenModal,
+    [NODE_ACTION_KEY.COPY]: () => setCloneNodeKeys('copy', keys),
+    [NODE_ACTION_KEY.CUT]: () => setCloneNodeKeys('cut', keys),
+    [NODE_ACTION_KEY.PASTE]: pasteNode,
+    [NODE_ACTION_KEY.IMPORT]: () => {
       fileInput.value?.click();
     },
-    [ANODE_ACTION_KEY.DOWNLOAD]: () => {
-      nodeManagerStore.exportToFile(DOWNLOAD_FILE_TYPE.VUE, key);
+    [NODE_ACTION_KEY.DOWNLOAD]: () => {
+      store.exportSingle(DOWNLOAD_FILE_TYPE.VUE, obtainedNode.value!);
     },
-    [ANODE_ACTION_KEY.RENAME]: () => (openRenameOrCreateModal.value = true),
-    [ANODE_ACTION_KEY.DELETE]: () => onDeleteNode(keys),
+    [NODE_ACTION_KEY.RENAME]: () => (openModal.value = true),
+    [NODE_ACTION_KEY.DELETE]: () => onDelete(keys),
   };
 
   ctxMenuKey.value = menuKey;
-  currentNodeKey.value = key;
-  currentNodeName.value = name;
   // @ts-ignore
   actions[menuKey]();
 };
 
-const openCreateModal = () => {
-  currentNodeName.value = '';
-  openRenameOrCreateModal.value = true;
+const onOpenModal = () => {
+  if (ctxMenuKey.value !== NODE_ACTION_KEY.RENAME) {
+    inputNameVal.value = '';
+  }
+  openModal.value = true;
 };
 
-const onRenameOrCreateNode = async () => {
-  const menuKey = ctxMenuKey.value!;
-  const name = currentNodeName.value;
-
-  if (!name) {
-    message.error('请输入内容');
+const onModalOk = async () => {
+  if (!inputNameVal.value) {
+    message.error('请输入名称');
     return;
   }
 
-  const isCreate: boolean = [
-    ANODE_ACTION_KEY.CREATE_PROJECT,
-    ANODE_ACTION_KEY.CREATE_FOLDER,
-    ANODE_ACTION_KEY.CREATE_FILE,
+  const menuKey = ctxMenuKey.value!;
+
+  const isCreateNode: boolean = [
+    NODE_ACTION_KEY.CREATE_PROJECT,
+    NODE_ACTION_KEY.CREATE_FOLDER,
+    NODE_ACTION_KEY.CREATE_FILE,
   ].includes(menuKey);
-  if (isCreate) {
+
+  if (isCreateNode) {
     try {
-      await workspaceStore.createAndInsertNode({
-        name,
-        // @ts-ignore
-        type: menuKey,
-        anchorKey: currentNodeKey.value,
-        isRoot: menuKey === ANODE_ACTION_KEY.CREATE_PROJECT,
-      });
+      let rootKey = obtainedNode.value?.rootKey ?? '';
+      let data: FolderNode | FileNode;
+
+      if (menuKey === NODE_ACTION_KEY.CREATE_FILE) {
+        data = await createFileNode(rootKey, inputNameVal.value);
+      } else {
+        const isRoot = menuKey === NODE_ACTION_KEY.CREATE_PROJECT;
+        if (isRoot) {
+          rootKey = '';
+          obtainedNode.value = undefined;
+        }
+
+        data = await createFolderNode({
+          name: inputNameVal.value,
+          rootKey,
+          isRoot,
+        });
+      }
+
+      store.insertNode(data as WorkDataNodeType, obtainedNode.value);
       message.success('新建成功');
-    } catch (error: Error) {
-      message.error(error.message);
+    } catch (e) {
+      console.log(e);
     }
   } else {
-    try {
-      workspaceStore.updateNode(currentNodeKey.value, { name });
-      message.success('重命名成功');
-    } catch (error: Error) {
-      message.error(error.message);
-    }
+    store.updateNode(obtainedNode.value!, { name: inputNameVal.value });
+    message.success('重命名成功');
   }
 
-  resetModal();
-};
-
-const resetModal = () => {
-  currentNodeKey.value = '';
-  currentNodeName.value = '';
+  obtainedNode.value = undefined;
   ctxMenuKey.value = undefined;
-  openRenameOrCreateModal.value = false;
+  openModal.value = false;
+  inputNameVal.value = '';
 };
 
 const setCloneNodeKeys = (type: 'copy' | 'cut', keys: string[]) => {
-  cloneNodeKeys.type = type;
-  cloneNodeKeys.keys = keys;
+  cloneNodeInfo.type = type;
+  cloneNodeInfo.keys = keys;
   message.info((type === 'copy' ? '复制' : '剪切') + '成功');
 };
 
 const pasteNode = async () => {
-  nodeManagerStore.pasteNode(currentNodeKey.value, cloneNodeKeys.keys);
-  if (cloneNodeKeys.type === 'cut') {
-    nodeManagerStore.removeNodes(cloneNodeKeys.keys);
+  const isCut = cloneNodeInfo.type === 'cut';
+  store.pasteFileNode(obtainedNode.value!, cloneNodeInfo.keys, isCut);
+  if (isCut) {
+    cloneNodeInfo.keys.forEach(key => {
+      store.removeNode(obtainedNode.value!.rootKey, key);
+    });
   }
-  message.success('粘贴成功');
 };
 
-const onDeleteNode = async (keys: string[]) => {
-  const fn = () => {
-    try {
-      nodeManagerStore.removeNodes(keys);
-    } catch (error: Error) {
-      message.error(error.message);
-    }
+const onDelete = async (keys: string[]) => {
+  const handler = () => {
+    keys.forEach(key => {
+      store.removeNode(obtainedNode.value!.rootKey, key);
+    });
   };
 
-  if (showDelPrompt.value) {
-    fn();
+  if (!showDelPrompt.value) {
+    handler();
     return;
   }
 
@@ -380,7 +377,7 @@ const onDeleteNode = async (keys: string[]) => {
         )
       ),
     ]),
-    onOk: fn,
+    onOk: handler,
   });
 };
 </script>
