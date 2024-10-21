@@ -1,12 +1,10 @@
 <template>
   <component
-    :is="node.name"
-    v-on="node.on"
+    :is="node.tagName"
+    v-on="node.eventBinding"
     :id="node.key"
-    v-bind="{
-      ...node.props,
-      ...node.attrs,
-    }">
+    :data-root-key="node.rootKey"
+    v-bind="node.attributes">
     <span>{{ node.textContent }}</span>
     <template v-if="node.children.length">
       <NodeRenderer
@@ -18,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { type ElementANode } from '@/share/abstractNode';
+import { type FileConentNode } from '@/api/workData';
 
-const { node } = defineProps<{ node: ElementANode }>();
+const { node } = defineProps<{ node: FileConentNode }>();
 </script>
