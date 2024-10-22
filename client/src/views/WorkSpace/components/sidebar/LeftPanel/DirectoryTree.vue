@@ -159,24 +159,34 @@ const obtainedNode = ref<WorkDataNodeType>();
 
 const setTreeMaxHeight = () => (maxHeight.value = getWinHeight() - 58);
 
-onBeforeMount(() => {
-  showDelPrompt.value = getLocalItem('showDelPrompt');
-  setTimeout(() => {
-    expandedKeys.value = store.expandedFileNodeKeys;
-  }, 0);
-});
+const init = ref(false);
+
 onMounted(() => {
+  showDelPrompt.value = getLocalItem('showDelPrompt') ?? true;
   window.addEventListener('resize', setTreeMaxHeight);
 });
+
 onBeforeUnmount(() => {
   window.removeEventListener('resize', setTreeMaxHeight);
 });
 
 watch(
+  () => store.expandedFileNodeKeys,
+  newVal => {
+    if (!init.value) {
+      init.value = true;
+      expandedKeys.value = newVal;
+    }
+  }
+);
+
+watch(
   () => expandedKeys.value,
   newVal => {
     const val = newVal.filter(item => item?.endsWith(';fld'));
-    store.setExpandedFileNodeKeys(val);
+    if (init.value && val.length) {
+      store.setExpandedFileNodeKeys(val);
+    }
   }
 );
 
