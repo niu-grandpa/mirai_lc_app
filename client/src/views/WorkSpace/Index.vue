@@ -14,14 +14,14 @@ import config from '@/config/common';
 import { WorkSpaceLayout } from '@/layouts';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { message } from 'ant-design-vue';
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { WorkspaceSidebar, WorkspaceVisual } from './components';
 
 const store = useWorkspaceStore();
 
 const timer = ref();
 
-onMounted(async () => {
+onBeforeMount(async () => {
   const hide = message.loading('加载数据中..', 0);
   try {
     const data = await store.getData();
