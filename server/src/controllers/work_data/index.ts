@@ -37,6 +37,14 @@ export class WorkDataController extends TreeDataOptionsController {
       throw handleReqError(e);
     }
   };
+
+  export = async (req: IReq<SyncWorkDataReq>, res: IRes): Promise<IRes> => {
+    try {
+      return sendResponse(res, HttpStatusCodes.OK);
+    } catch (e) {
+      throw handleReqError(e);
+    }
+  };
 }
 
 const controller = new WorkDataController();
