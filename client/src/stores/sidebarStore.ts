@@ -1,7 +1,7 @@
 import { getLocalItem, setLocalItem } from '@/share';
 import { defineStore } from 'pinia';
 
-const initWidth = getLocalItem<number>('SIDER_WIDTH') || 370;
+const initWidth = getLocalItem<number>('SIDER_WIDTH') || 350;
 
 export const useSidebarStore = defineStore('sidebar', {
   state: () => ({
