@@ -75,6 +75,8 @@ export interface FileNode {
   isFile: boolean;
   isLeaf: boolean;
   content: FileConentNode[];
+  props: { [x: string]: any };
+  emits: { event: string; payload: any }[];
 }
 
 export const createFileNode = async (
@@ -101,6 +103,7 @@ export interface FileConentNode {
   x: number;
   y: number;
   key: string;
+  path: string;
   rootKey: string;
   tagName: string;
   textContent: string;

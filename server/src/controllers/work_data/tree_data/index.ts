@@ -14,6 +14,8 @@ export default class TreeDataOptionsController {
       rootKey,
       key: this.genId(),
       name,
+      props: {},
+      emits: [],
       isFile: true,
       isLeaf: true,
       content: [],
@@ -91,6 +93,7 @@ export default class TreeDataOptionsController {
       const obj: FileContentNode = {
         x,
         y,
+        path: '',
         tagName,
         rootKey,
         eventBinding,

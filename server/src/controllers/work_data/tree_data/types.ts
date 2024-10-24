@@ -18,12 +18,15 @@ export interface FileNode {
   isLeaf: boolean;
   rootKey: string;
   content: FileContentNode[];
+  props: { [x: string]: any };
+  emits: { event: string; payload: any }[];
 }
 
 export interface FileContentNode {
   x: number;
   y: number;
   key: string;
+  path: string; // 文件路径，如果是组件则通过这个属性去import
   rootKey: string;
   tagName: string;
   textContent: string;
