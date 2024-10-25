@@ -4,7 +4,9 @@ import { handleReqError, sendResponse } from '@util/misc';
 import TB_NAME from 'constants/db_table_name';
 import HttpStatusCodes from 'constants/http_status_codes';
 import { useDB } from 'database';
+import exportWorkData, { FileExportType } from './share/export';
 import TreeDataOptionsController from './tree_data';
+import { FolderChildren, FolderNode } from './tree_data/types';
 
 export class WorkDataController extends TreeDataOptionsController {
   getAll = async (
@@ -38,9 +40,27 @@ export class WorkDataController extends TreeDataOptionsController {
     }
   };
 
-  export = async (req: IReq<SyncWorkDataReq>, res: IRes): Promise<IRes> => {
+  export = async (
+    req: IReq<{ data: FolderChildren; fileType: FileExportType }>,
+    res: IRes
+  ): Promise<IRes> => {
     try {
-      return sendResponse(res, HttpStatusCodes.OK);
+      const { data, fileType } = req.body;
+      const exportFn = exportWorkData(data);
+
+      let link = '';
+
+      if (fileType === 'vue') {
+        link = await exportFn.toVue((data as FolderNode).isRoot);
+      } else if (fileType === 'json') {
+        link = await exportFn.toJson();
+      }
+
+      await useDB(
+        `INSERT INTO ${TB_NAME.DOWNLOAD} (link) VALUES(?) ON DUPLICATE KEY UPDATE createAt = CURRENT_TIMESTAMP;`,
+        [link]
+      );
+      return sendResponse(res, HttpStatusCodes.OK, link);
     } catch (e) {
       throw handleReqError(e);
     }
