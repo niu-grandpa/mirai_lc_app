@@ -19,7 +19,9 @@ const cleanupDownloadedFiles = async () => {
       });
     });
 
-    await useDB(`DELETE FROM ${TB_NAME.DOWNLOAD} WHERE createAt `);
+    await useDB(
+      `DELETE FROM ${TB_NAME.DOWNLOAD} WHERE createAt  < NOW() - INTERVAL 1 DAY`
+    );
     logger.info('运行定时任务: 删除过期下载文件');
   } catch {
     logger.err('删除过期记录时发生错误');
