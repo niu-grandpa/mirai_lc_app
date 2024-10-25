@@ -137,3 +137,19 @@ export type WorkDataNodeType = (FolderNode | FileNode | FileConentNode) & {
   isFolder: boolean;
   children: WorkDataNodeType[];
 };
+
+export type ExportDataReq = {
+  data: FolderOrFileNodeType;
+  fileType: DataExportType;
+};
+
+export type DataExportType = 'vue' | 'react' | 'json' | 'html';
+
+export const exportData = async (data: ExportDataReq): Promise<string> => {
+  const { data: res } = await request<string>({
+    method: 'POST',
+    url: '/work-data/export',
+    data,
+  });
+  return res;
+};
