@@ -119,14 +119,10 @@ export default function exportWorkData(data: FolderChildren) {
     async toVue(_package?: boolean): Promise<string> {
       if (_package) {
         await createZipPackage('.vue');
-        return `${returnVal}.vue`;
-      } else {
-        await createFile(
-          outputPath + '.vue',
-          // @ts-ignore
-          compileToVue(data.children[0].children[0])
-        );
         return `${returnVal}.zip`;
+      } else {
+        await createFile(outputPath + '.vue', compileToVue(data as FileNode));
+        return `${returnVal}.vue`;
       }
     },
   };
