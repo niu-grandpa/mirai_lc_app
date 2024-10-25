@@ -6,12 +6,15 @@ import { compileToReact, compileToVue } from './compile';
 
 type FileSuffix = '.vue' | '.tsx';
 
+export type FileExportType = 'vue' | 'react' | 'json' | 'html';
+
 export default function exportWorkData(data: FolderChildren) {
   const zip = new AdmZip();
-  const downloadPath = '../../../../public/download';
 
+  const downloadPath = '../../../../public/download';
   const baseName = `${data.name}_${data.rootKey.replace(';fld', '')}`;
   const outputPath = path.join(__dirname, downloadPath, baseName);
+  const returnVal = `/download/${baseName}`;
 
   const createFile = async (path: string, content: string) => {
     await writeFile(path, content, 'utf8');
@@ -78,7 +81,7 @@ export default function exportWorkData(data: FolderChildren) {
     }
   };
 
-  const getTemplatePath = (type: 'vue' | 'react') => {
+  const getTemplatePath = (type: FileExportType) => {
     const templatePath = '../../../../static/template';
     return path.join(__dirname, templatePath, `${type}-project`);
   };
@@ -108,15 +111,22 @@ export default function exportWorkData(data: FolderChildren) {
   };
 
   return {
-    async toJson() {
+    async toJson(): Promise<string> {
       await writeJson(outputPath + '.json', data, { spaces: 1 });
+      return `${returnVal}.json`;
     },
 
-    async toVue(_package?: boolean) {
+    async toVue(_package?: boolean): Promise<string> {
       if (_package) {
         await createZipPackage('.vue');
+        return `${returnVal}.vue`;
       } else {
-        await createFile(outputPath + '.vue', compileToVue(data as FileNode));
+        await createFile(
+          outputPath + '.vue',
+          // @ts-ignore
+          compileToVue(data.children[0].children[0])
+        );
+        return `${returnVal}.zip`;
       }
     },
   };
