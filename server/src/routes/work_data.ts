@@ -13,4 +13,6 @@ router.post('/create-folder', controller.createFolderNode);
 router.post('/create-file', controller.createFileNode);
 router.post('/create-component', controller.createComponent);
 
+router.post('/export', authenticateUser, controller.export);
+
 export default router;
