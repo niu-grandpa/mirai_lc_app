@@ -9,10 +9,13 @@
         "children": [
           {
             "key": "njzdaycW41nrHr3DDtmFi6",
+            "path": "",
             "rootKey": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
             "name": "index",
             "isFile": true,
             "isLeaf": true,
+            "props": {},
+            "emits": [],
             "content": [
               {
                 "x": 0,
@@ -27,6 +30,7 @@
                 "children": [],
                 "textContent": "some content...",
                 "key": "nHmGqwxPhEtzBN5nxa5C6k",
+                "path": "",
                 "rootKey": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
                 "attributes": {
                   "style": {
@@ -44,13 +48,15 @@
         "isLeaf": false,
         "isFolder": true,
         "rootKey": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
-        "key": "n3DTIhapoZsPT881z19OAJ;fld"
+        "key": "n3DTIhapoZsPT881z19OAJ;fld",
+        "path": ""
       }
     ],
     "isLeaf": false,
     "isFolder": true,
     "rootKey": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
     "key": "nnKye-j-Wwh-ZiA2rMd_OW;fld",
+    "path": "",
     "createAt": "2024/10/16 14:27:34"
   }
 ]
