@@ -9,11 +9,14 @@ export default class TreeDataOptionsController {
     return `n${nanoid()}${suffix ?? ''}`;
   }
 
-  private __createFileNode(rootKey: string, name: string): FileNode {
+  private __createFileNode(_rootKey: string, name: string): FileNode {
+    const key = this.genId();
+    // 只有创建单个文件作为根才会出现的情况
+    const rootKey = !_rootKey ? key : _rootKey;
     return {
-      rootKey,
-      key: this.genId(),
+      key,
       name,
+      rootKey,
       props: {},
       emits: [],
       isFile: true,
