@@ -24,10 +24,4 @@ export const NodeActionTitles = {
   [NODE_ACTION_KEY.DELETE]: '删除',
 };
 
-export enum DOWNLOAD_FILE_TYPE {
-  VUE = 'VUE',
-  HTML = 'HTML',
-  JSON = 'JSON',
-}
-
 export const VISUAL_CLASS_NAME = 'workspace-visual';
