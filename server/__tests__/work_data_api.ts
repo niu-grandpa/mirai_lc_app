@@ -82,4 +82,31 @@ describe('work-data接口', () => {
     );
     expect(response.status).toBe(200);
   });
+
+  it('POST /api/work-data/export', async () => {
+    const response = await axios.post(
+      'http://localhost:8000/api/v1/work-data/export',
+      {
+        fileType: 'json',
+        data: mockData[0],
+      }
+    );
+    const response2 = await axios.post(
+      'http://localhost:8000/api/v1/work-data/export',
+      {
+        fileType: 'vue',
+        data: mockData[0].children[0].children[0],
+      }
+    );
+    const response3 = await axios.post(
+      'http://localhost:8000/api/v1/work-data/export',
+      {
+        fileType: 'vue',
+        data: mockData[0],
+      }
+    );
+    expect(response.status).toBe(200);
+    expect(response2.status).toBe(200);
+    expect(response3.status).toBe(200);
+  });
 });
