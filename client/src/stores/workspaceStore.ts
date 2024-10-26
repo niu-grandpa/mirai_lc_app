@@ -1,4 +1,6 @@
 import {
+  DataExportType,
+  exportData,
   type FileConentNode,
   type FileNode,
   type FolderNode,
@@ -10,7 +12,7 @@ import {
 } from '@/api/workData';
 import commonConfig from '@/config/common';
 import { getLocalItem, setLocalItem } from '@/share';
-import { DOWNLOAD_FILE_TYPE, VISUAL_CLASS_NAME } from '@/share/enums';
+import { VISUAL_CLASS_NAME } from '@/share/enums';
 import workSpaceNodeUtils, {
   type Drag1Callback,
 } from '@/share/workSpaceNodeUtils';
@@ -283,8 +285,19 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     async import(file: File, key: string) {},
 
-    async export(type: DOWNLOAD_FILE_TYPE, data: FolderNode[]) {},
+    async export(fileType: DataExportType, rootKey: string) {
+      const el = document.createElement('a');
+      const data = workSpaceNodeUtils.getRootNode(this.workData, rootKey);
+      const link = await exportData({
+        fileType,
+        data,
+      });
 
-    async exportSingle(type: DOWNLOAD_FILE_TYPE, node: WorkDataNodeType) {},
+      el.download = '';
+      el.href = import.meta.env.PUBLIC_PROXY + link;
+      document.body.appendChild(el);
+      el.click();
+      document.body.removeChild(el);
+    },
   },
 });
