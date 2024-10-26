@@ -1,25 +1,24 @@
 <template>
   <a-card class="container" :bordered="false">
     <template #title>
-      项目源导出
+      项目导出
       <a-tooltip>
         <template #title>为降低服务器压力，每次只能导出一个。</template>
         <InfoCircleOutlined />
       </a-tooltip>
     </template>
     <template #extra>
-      <a-dropdown trigger="click">
+      <a-dropdown v-if="checked.length" trigger="click">
         <template #overlay>
           <a-menu @click="onDownload">
-            <a-menu-item :key="DOWNLOAD_FILE_TYPE.VUE">Vue</a-menu-item>
-            <a-menu-item :key="DOWNLOAD_FILE_TYPE.JSON">Json</a-menu-item>
-            <a-menu-item :key="DOWNLOAD_FILE_TYPE.HTML" disabled>
-              Html
-            </a-menu-item>
+            <a-menu-item key="json">json</a-menu-item>
+            <a-menu-item key="vue">vue</a-menu-item>
+            <a-menu-item key="react" disabled>react</a-menu-item>
+            <a-menu-item key="html" disabled>html</a-menu-item>
           </a-menu>
         </template>
         <a-button size="small">
-          选择类型
+          导出选项...
           <DownOutlined />
         </a-button>
       </a-dropdown>
@@ -30,7 +29,7 @@
         v-for="item in options"
         :value="item.value"
         :key="item.value">
-        <span style="padding-top: 3.5px; display: inline-block">
+        <span style="padding-top: 3px; display: inline-block">
           <FolderOutlined /> {{ item.label }}
         </span>
       </a-checkbox>
@@ -39,20 +38,24 @@
 </template>
 
 <script setup lang="ts">
-import { DOWNLOAD_FILE_TYPE } from '@/share/enums';
-import { useNodeManagerStore } from '@/stores/nodeManagerStore';
+import { type DataExportType } from '@/api/workData';
+import { useCommonStore } from '@/stores/commonStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { message, type CheckboxOptionType } from 'ant-design-vue';
+import {
+  message,
+  type CheckboxOptionType,
+  type MenuProps,
+} from 'ant-design-vue';
 import { ref, watchEffect } from 'vue';
 
-const workspaceStore = useWorkspaceStore();
-const nodeManagerStore = useNodeManagerStore();
+const commonStore = useCommonStore();
+const workSpaceStore = useWorkspaceStore();
 
 const checked = ref<string[]>([]);
 const options = ref<CheckboxOptionType[]>([]);
 
 watchEffect(() => {
-  options.value = workspaceStore.workData.map(({ name, key }) => ({
+  options.value = workSpaceStore.workData.map(({ name, key }) => ({
     label: name,
     value: key,
   }));
@@ -63,13 +66,18 @@ const onCheckBoxChange = (value: string[]) => {
   checked.value = !val ? [] : [val];
 };
 
-const onDownload = (e: any) => {
+const onDownload: MenuProps['onClick'] = async ({ key }) => {
   const [nodeKey] = checked.value;
   if (!nodeKey) {
     message.info('请勾选要导出的项目');
     return;
   }
-  nodeManagerStore.exportToFile(e.key, nodeKey, true);
+  try {
+    commonStore.setLoading(true);
+    await workSpaceStore.export(key as DataExportType, nodeKey);
+  } finally {
+    commonStore.setLoading(false);
+  }
 };
 </script>
 
