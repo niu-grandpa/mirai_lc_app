@@ -107,7 +107,7 @@ export default function exportWorkData(data: FolderChildren) {
     zip.writeZip(zipFilePath);
 
     // 移除源文件夹
-    rm(outputPath, { recursive: true });
+    await rm(outputPath, { recursive: true });
   };
 
   return {
