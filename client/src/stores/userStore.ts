@@ -61,10 +61,17 @@ export const useUserStore = defineStore('user', {
     },
 
     async login(data?: UserLoginReq & { remember: boolean }) {
-      const res = await userLogin(data);
-      this.setData(res);
-      if (!data?.remember) {
-        this.setToken('');
+      try {
+        const res = await userLogin(data);
+        this.setData(res);
+        if (!data?.remember) {
+          this.setToken('');
+        }
+      } catch (error: any) {
+        if (error.status === 401) {
+          this.initData();
+          console.log('登录过期, 清空用户数据');
+        }
       }
     },
 
