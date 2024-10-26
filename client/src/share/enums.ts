@@ -6,7 +6,7 @@ export enum NODE_ACTION_KEY {
   COPY = 'copy',
   PASTE = 'paste',
   IMPORT = 'import',
-  DOWNLOAD = 'download',
+  EXPORT = 'export',
   RENAME = 'rename',
   DELETE = 'delete',
   VIEW_CODE = 'viewCode',
@@ -19,7 +19,7 @@ export const NodeActionTitles = {
   [NODE_ACTION_KEY.COPY]: '复制',
   [NODE_ACTION_KEY.PASTE]: '粘贴',
   [NODE_ACTION_KEY.IMPORT]: '导入',
-  [NODE_ACTION_KEY.DOWNLOAD]: '下载',
+  [NODE_ACTION_KEY.EXPORT]: '导出',
   [NODE_ACTION_KEY.RENAME]: '重命名...',
   [NODE_ACTION_KEY.DELETE]: '删除',
 };

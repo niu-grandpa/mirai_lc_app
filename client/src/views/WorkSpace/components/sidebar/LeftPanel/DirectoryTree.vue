@@ -108,11 +108,7 @@ import {
   type FolderNode,
 } from '@/api/workData';
 import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
-import {
-  NODE_ACTION_KEY,
-  NodeActionTitles,
-  DOWNLOAD_FILE_TYPE,
-} from '@/share/enums';
+import { NODE_ACTION_KEY, NodeActionTitles } from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import { Checkbox, message, Modal } from 'ant-design-vue';
@@ -135,7 +131,7 @@ const rtOptVisbile = reactive({
   paste: true,
   create: true,
   import: true,
-  download: true,
+  export: true,
   rename: true,
 });
 
@@ -222,7 +218,7 @@ const getIsRtOptDisplay = (k: NODE_ACTION_KEY): boolean => {
     (k === NODE_ACTION_KEY.PASTE && !rtOptVisbile.paste) ||
     (k === NODE_ACTION_KEY.RENAME && !rtOptVisbile.rename) ||
     (k === NODE_ACTION_KEY.IMPORT && !rtOptVisbile.import) ||
-    (k === NODE_ACTION_KEY.DOWNLOAD && !rtOptVisbile.download) ||
+    (k === NODE_ACTION_KEY.EXPORT && !rtOptVisbile.export) ||
     ([NODE_ACTION_KEY.CREATE_FOLDER, NODE_ACTION_KEY.CREATE_FILE].includes(k) &&
       !rtOptVisbile.create)
   );
@@ -248,7 +244,7 @@ const onRightClick = ({ event, node }: { event: any; node: EventDataNode }) => {
   rtOptVisbile.create = hidden;
   rtOptVisbile.paste = hidden;
   rtOptVisbile.import = hidden;
-  rtOptVisbile.download = node.isFile;
+  rtOptVisbile.export = node.isFile;
 };
 
 const onCtxMenuClick = (key: string, menuKey: NODE_ACTION_KEY) => {
@@ -266,8 +262,8 @@ const onCtxMenuClick = (key: string, menuKey: NODE_ACTION_KEY) => {
     [NODE_ACTION_KEY.IMPORT]: () => {
       fileInput.value?.click();
     },
-    [NODE_ACTION_KEY.DOWNLOAD]: () => {
-      store.exportSingle(DOWNLOAD_FILE_TYPE.VUE, obtainedNode.value!);
+    [NODE_ACTION_KEY.EXPORT]: () => {
+      // store.export(DOWNLOAD_FILE_TYPE.VUE, obtainedNode.value!);
     },
     [NODE_ACTION_KEY.RENAME]: () => (openModal.value = true),
     [NODE_ACTION_KEY.DELETE]: () => onDelete(keys),
