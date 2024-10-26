@@ -1,6 +1,6 @@
 import { type IReq, type IRes } from '@/types/types';
 import { UserModel } from '@models/user';
-import { handleReqError, sendResponse, verifyJwtToken } from '@util/misc';
+import { sendResponse, verifyJwtToken } from '@util/misc';
 import TB_NAME from 'constants/db_table_name';
 import HttpStatusCodes from 'constants/http_status_codes';
 import RequestErrText from 'constants/request_error_text';
@@ -25,10 +25,10 @@ export const authenticateUser = async <T>(
       );
     }
 
-    const { exp, account } = await verifyJwtToken<UserModel>(authorization);
+    const { exp, phoneNumber } = await verifyJwtToken<UserModel>(authorization);
     const [user] = await useDB<UserModel>(
-      `SELECT * FROM ${TB_NAME.USER} WHERE account = (?)`,
-      [account]
+      `SELECT * FROM ${TB_NAME.USER} WHERE phoneNumber = (?)`,
+      [phoneNumber]
     );
 
     //* 运行非user接口测试时需要注释以下全部判断
@@ -53,14 +53,18 @@ export const authenticateUser = async <T>(
       const { exp: oldExp } = await verifyJwtToken<UserModel>(authorization);
       if (exp && oldExp && exp > oldExp) {
         await useDB(
-          `UPDATE ${TB_NAME.USER} SET token = (?) WHERE account = (?)`,
-          [authorization, account]
+          `UPDATE ${TB_NAME.USER} SET token = (?) WHERE phoneNumber = (?)`,
+          [authorization, phoneNumber]
         );
       }
     }
 
     next();
   } catch (e) {
-    throw handleReqError(e);
+    return sendResponse(
+      res,
+      HttpStatusCodes.UNAUTHORIZED,
+      RequestErrText.LOGIN_EXPIRED
+    );
   }
 };
