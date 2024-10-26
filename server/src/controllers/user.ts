@@ -13,6 +13,7 @@ import {
   sendResponse,
   signJwtToken,
   verifyByBcrypt,
+  verifyJwtToken,
 } from '@util/misc';
 import TB_NAME from 'constants/db_table_name';
 import HttpStatusCodes from 'constants/http_status_codes';
@@ -139,13 +140,18 @@ class UserController {
           }
         }
       } else if (authorization) {
-        const user = await this._getUserByToken(authorization);
-        if (!user) {
-          resp = RequestErrText.NOT_USERS;
+        try {
+          const user = await this._getUserByToken(authorization);
+          if (!user) {
+            resp = RequestErrText.NOT_USERS;
+            statusCode = HttpStatusCodes.UNAUTHORIZED;
+          } else {
+            await this._updateUserLoginStatus(authorization, true);
+            resp = user;
+          }
+        } catch {
+          resp = RequestErrText.LOGIN_EXPIRED;
           statusCode = HttpStatusCodes.UNAUTHORIZED;
-        } else {
-          await this._updateUserLoginStatus(authorization, true);
-          resp = user;
         }
       } else {
         resp = RequestErrText.MISSING_PARAMS;
@@ -264,6 +270,7 @@ class UserController {
   }
 
   private async _getUserByToken(token: string): Promise<UserModel | null> {
+    await verifyJwtToken<UserModel>(token);
     const [user] = await useDB<UserModel>(
       `SELECT * FROM ${TB_NAME.USER} WHERE token = (?)`,
       [token]
