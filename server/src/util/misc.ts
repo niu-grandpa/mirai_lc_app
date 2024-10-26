@@ -72,7 +72,7 @@ export function handleReqError(e: Error): RouteError {
   logger.err(e.message);
   return new RouteError(
     HttpStatusCodes.INTERNAL_SERVER_ERROR,
-    RequestErrText.ERROR
+    e.message || RequestErrText.ERROR
   );
 }
 
