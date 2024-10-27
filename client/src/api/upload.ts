@@ -1,9 +1,11 @@
-import { type TreeDataCommonType } from '@/share/abstractNode';
 import { request } from '.';
+import { WorkDataNodeType } from './workData';
 
-export const readWorkFile = async (file: File): Promise<TreeDataCommonType> => {
+export const readJsonFile = async (
+  file: File
+): Promise<WorkDataNodeType | WorkDataNodeType[]> => {
   const data = new FormData();
-  data.append('workFile', file);
+  data.append('readJsonFile', file);
 
   const { data: str } = await request<string>({
     method: 'POST',
