@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 export function getWinHeight() {
   return (
     window.innerHeight ||
@@ -68,4 +70,23 @@ export function deepClone<T>(o: T): T {
 export function extractNumberFromString(input: string): number {
   const result = input.match(/-?\d+(\.\d+)?/);
   return result ? parseFloat(result[0]) : 0;
+}
+
+export async function downloadFile(url: string) {
+  const response = await axios({
+    url: url,
+    method: 'GET',
+    responseType: 'blob',
+  });
+
+  const blob = response.data;
+  const downloadUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  a.href = downloadUrl;
+  a.download = url.split('/').pop()!; // 提取文件名
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(downloadUrl); // 释放 Blob 对象
 }
