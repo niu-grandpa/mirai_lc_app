@@ -1,5 +1,5 @@
 import AdmZip from 'adm-zip';
-import { copy, mkdir, rm, writeFile, writeJson } from 'fs-extra';
+import { copy, mkdir, remove, writeFile, writeJson } from 'fs-extra';
 import path from 'path';
 import { FileNode, FolderChildren, FolderNode } from '../tree_data/types';
 import { compileToReact, compileToVue } from './compile';
@@ -107,7 +107,7 @@ export default function exportWorkData(data: FolderChildren) {
     zip.writeZip(zipFilePath);
 
     // 移除源文件夹
-    await rm(outputPath, { recursive: true });
+    await remove(outputPath);
   };
 
   return {
