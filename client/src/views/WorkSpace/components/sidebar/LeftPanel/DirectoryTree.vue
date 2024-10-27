@@ -57,16 +57,28 @@
             <a-menu
               style="width: 120px"
               @click="(item:any) => onCtxMenuClick(treeKey, item.key)">
-              <a-menu-item
-                :key="k"
-                v-for="(v, k) in NodeActionTitles"
-                :danger="k === NODE_ACTION_KEY.DELETE"
-                :style="{ display: getIsRtOptDisplay(k) ? 'none' : '' }"
-                :disabled="
-                  k === NODE_ACTION_KEY.PASTE && !cloneNodeInfo.keys.length
-                ">
-                {{ v }}
-              </a-menu-item>
+              <template v-for="(v, k) in NodeActionTitles" :key="k">
+                <a-sub-menu
+                  v-if="k === NODE_ACTION_KEY.EXPORT"
+                  key="export"
+                  title="导出为..."
+                  :style="{ display: getIsRtOptDisplay(k) ? 'none' : '' }">
+                  <a-menu-item v-for="(title, key) in ExportOptions" :key="key">
+                    {{ title }}
+                  </a-menu-item>
+                </a-sub-menu>
+
+                <a-menu-item
+                  v-else
+                  :key="k"
+                  :danger="k === NODE_ACTION_KEY.DELETE"
+                  :style="{ display: getIsRtOptDisplay(k) ? 'none' : '' }"
+                  :disabled="
+                    k === NODE_ACTION_KEY.PASTE && !cloneNodeInfo.keys.length
+                  ">
+                  {{ v }}
+                </a-menu-item>
+              </template>
             </a-menu>
           </template>
         </a-dropdown>
@@ -106,22 +118,20 @@ import {
   type WorkDataNodeType,
   type FileNode,
   type FolderNode,
+  type DataExportType,
 } from '@/api/workData';
 import { getLocalItem, getWinHeight, setLocalItem } from '@/share';
-import { NODE_ACTION_KEY, NodeActionTitles } from '@/share/enums';
+import {
+  NODE_ACTION_KEY,
+  NodeActionTitles,
+  EXPORT_OPTIONS,
+  ExportOptions,
+} from '@/share/enums';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue';
 import { Checkbox, message, Modal } from 'ant-design-vue';
 import { type EventDataNode } from 'ant-design-vue/es/tree';
-import {
-  h,
-  onBeforeMount,
-  onBeforeUnmount,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from 'vue';
+import { h, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 
 const store = useWorkspaceStore();
 
@@ -200,11 +210,7 @@ const onImportNodes = async () => {
   const fs = fileInput.value?.files;
   if (fs?.length) {
     try {
-      await store.import(fs[0], obtainedNode.value!.key);
-    } catch (e: Error) {
-      message.error(
-        e.message ?? '无法识别文件内容，请确保数据格式符合既定标准'
-      );
+      await store.import(fs[0], obtainedNode.value!);
     } finally {
       fileInput.value!.value = '';
     }
@@ -247,10 +253,19 @@ const onRightClick = ({ event, node }: { event: any; node: EventDataNode }) => {
   rtOptVisbile.export = node.isFile;
 };
 
-const onCtxMenuClick = (key: string, menuKey: NODE_ACTION_KEY) => {
+const onCtxMenuClick = (
+  key: string,
+  menuKey: NODE_ACTION_KEY | EXPORT_OPTIONS
+) => {
   const keys = store.selectedFileNodeKeys.includes(key)
     ? store.selectedFileNodeKeys
     : [key];
+
+  // @ts-ignore
+  if (ExportOptions[menuKey]) {
+    store.export(menuKey as DataExportType, obtainedNode.value!);
+    return;
+  }
 
   const actions = {
     [NODE_ACTION_KEY.CREATE_PROJECT]: onOpenModal,
@@ -262,14 +277,11 @@ const onCtxMenuClick = (key: string, menuKey: NODE_ACTION_KEY) => {
     [NODE_ACTION_KEY.IMPORT]: () => {
       fileInput.value?.click();
     },
-    [NODE_ACTION_KEY.EXPORT]: () => {
-      // store.export(DOWNLOAD_FILE_TYPE.VUE, obtainedNode.value!);
-    },
     [NODE_ACTION_KEY.RENAME]: () => (openModal.value = true),
     [NODE_ACTION_KEY.DELETE]: () => onDelete(keys),
   };
 
-  ctxMenuKey.value = menuKey;
+  ctxMenuKey.value = menuKey as NODE_ACTION_KEY;
   // @ts-ignore
   actions[menuKey]();
 };

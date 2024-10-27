@@ -1,9 +1,11 @@
+import { readJsonFile } from '@/api/upload';
 import {
   DataExportType,
-  exportData,
   type FileConentNode,
   type FileNode,
   type FolderNode,
+  type FolderOrFileNodeType,
+  getExportFileUrl,
   getWorkData,
   type GetWorkDataRep,
   syncWorkData,
@@ -11,7 +13,7 @@ import {
   WorkDataNodeType,
 } from '@/api/workData';
 import commonConfig from '@/config/common';
-import { getLocalItem, setLocalItem } from '@/share';
+import { downloadFile, getLocalItem, setLocalItem } from '@/share';
 import { VISUAL_CLASS_NAME } from '@/share/enums';
 import workSpaceNodeUtils, {
   type Drag1Callback,
@@ -283,21 +285,36 @@ export const useWorkspaceStore = defineStore('workspace', {
       this.setOpenedFileNodeKeys();
     },
 
-    async import(file: File, key: string) {},
+    async import(file: File, node: WorkDataNodeType) {
+      const data = await readJsonFile(file);
 
-    async export(fileType: DataExportType, rootKey: string) {
-      const el = document.createElement('a');
-      const data = workSpaceNodeUtils.getRootNode(this.workData, rootKey);
-      const link = await exportData({
-        fileType,
-        data,
-      });
+      if (Array.isArray(data)) {
+        workSpaceNodeUtils.renameDuplicate(node.children, data);
+        node.children.push(...data);
+      } else {
+        node.children.push(data);
+      }
 
-      el.download = '';
-      el.href = import.meta.env.PUBLIC_PROXY + link;
-      document.body.appendChild(el);
-      el.click();
-      document.body.removeChild(el);
+      workSpaceNodeUtils.sort(node.children, true);
+    },
+
+    /**
+     * @param fileType 导出文件类型
+     * @param node 根节点key或者节点对象
+     */
+    async export(fileType: DataExportType, node: string | WorkDataNodeType) {
+      const data =
+        typeof node === 'string'
+          ? workSpaceNodeUtils.getRootNode(this.workData, node)
+          : node;
+
+      downloadFile(
+        import.meta.env.PUBLIC_PROXY +
+          (await getExportFileUrl({
+            fileType,
+            data: data as FolderOrFileNodeType,
+          }))
+      );
     },
   },
 });
