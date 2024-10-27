@@ -51,7 +51,7 @@ export interface FolderNode {
   name: string;
   isRoot: boolean;
   rootKey: string;
-  children: FileNode[];
+  children: WorkDataNodeType[];
   isLeaf: boolean;
   isFolder: boolean;
   createAt?: string;
@@ -145,7 +145,9 @@ export type ExportDataReq = {
 
 export type DataExportType = 'vue' | 'react' | 'json' | 'html';
 
-export const exportData = async (data: ExportDataReq): Promise<string> => {
+export const getExportFileUrl = async (
+  data: ExportDataReq
+): Promise<string> => {
   const { data: res } = await request<string>({
     method: 'POST',
     url: '/work-data/export',
