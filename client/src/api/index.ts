@@ -26,7 +26,7 @@ const createRequest = () => {
       if (err.status !== 500) {
         message.error(err.response?.data?.data || '未知错误');
       } else {
-        message.error('服务器错误，请稍后再试。');
+        message.error(err.response.data.message || '服务器错误，请稍后重试。');
       }
 
       return Promise.reject(err);
