@@ -13,7 +13,7 @@ const upload = multer({
 router.post(
   '/work-file',
   authenticateUser,
-  upload.single('workFile'),
+  upload.single('readJsonFile'),
   controller.readJsonFile
 );
 
