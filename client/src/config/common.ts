@@ -10,6 +10,6 @@ enum LOCAL_STORAGE_KEYS {
 export default {
   theme: 'dark',
   loading: false,
-  autoSaveInterval: 60000, // -> 60s
+  autoSaveInterval: 3 * 60 * 1000, // -> 3 minutes
   storageKeys: LOCAL_STORAGE_KEYS,
 };
