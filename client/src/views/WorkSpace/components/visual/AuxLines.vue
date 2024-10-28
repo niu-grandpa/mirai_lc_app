@@ -4,14 +4,14 @@
 </template>
 
 <script setup lang="ts">
-import { DRAG_RANGE } from '@/hooks/useDrag';
+import { type FileConentNode } from '@/api/workData';
 import { extractNumberFromString } from '@/share';
-import { type ElementANode } from '@/share/abstractNode';
+import { DRAG_RANGE } from '@/share/workSpaceNodeUtils';
 import { useCommonStore } from '@/stores/commonStore';
 import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
-  anodes: ElementANode[];
+  children: FileConentNode[];
 }>();
 
 const store = useCommonStore();
@@ -100,26 +100,29 @@ const updateAlignment = () => {
     return;
   }
 
+  const elWidth = el.offsetWidth;
+  const elHeight = el.offsetHeight;
+
   let foundAlignment = false;
 
   // 先计算当前元素的边界值
   const curRight = curX + curW;
   const curBottom = curY + curH;
 
-  props.anodes.some(other => {
+  props.children.some(other => {
     if (el.id === other.key) return false;
 
     const {
       x: targetX,
       y: targetY,
-      attrs: {
+      attributes: {
         style: { width: targetW, height: targetH },
       },
     } = other;
 
     // 计算目标元素的边界值
-    const targetRight = targetX + extractNumberFromString(targetW);
-    const targetBottom = targetY + extractNumberFromString(targetH);
+    const targetRight = targetX + extractNumberFromString(targetW ?? elWidth);
+    const targetBottom = targetY + extractNumberFromString(targetH ?? elHeight);
 
     const topAlignMatch =
       checkIfWithinThreshold(curY, targetY) ||
