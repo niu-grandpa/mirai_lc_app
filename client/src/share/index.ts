@@ -67,7 +67,8 @@ export function deepClone<T>(o: T): T {
   return result;
 }
 
-export function extractNumberFromString(input: string): number {
+export function extractNumberFromString(input: string | number): number {
+  if (typeof input === 'number') return input;
   const result = input.match(/-?\d+(\.\d+)?/);
   return result ? parseFloat(result[0]) : 0;
 }
