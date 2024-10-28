@@ -277,7 +277,7 @@ const onCtxMenuClick = (
     [NODE_ACTION_KEY.IMPORT]: () => {
       fileInput.value?.click();
     },
-    [NODE_ACTION_KEY.RENAME]: () => (openModal.value = true),
+    [NODE_ACTION_KEY.RENAME]: onOpenModal,
     [NODE_ACTION_KEY.DELETE]: () => onDelete(keys),
   };
 
@@ -289,6 +289,8 @@ const onCtxMenuClick = (
 const onOpenModal = () => {
   if (ctxMenuKey.value !== NODE_ACTION_KEY.RENAME) {
     inputNameVal.value = '';
+  } else {
+    inputNameVal.value = obtainedNode.value!.name;
   }
   openModal.value = true;
 };
