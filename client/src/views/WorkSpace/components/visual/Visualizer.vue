@@ -2,20 +2,19 @@
   <section
     :class="VISUAL_CLASS_NAME"
     ref="containerRef"
-    @click.stop="onClick"
-    @scroll="onScroll">
+    @click.stop="onContainerClick"
+    @scroll="onContainerScroll">
     <canvas ref="canvasRef" />
     <HighlightBox v-show="isShow" />
-    <AuxLines :anodes="anodeList" />
-    <NodeRenderer v-for="anode in anodeList" :key="anode.key" :node="anode" />
+    <AuxLines :children="nodes" />
+    <NodeRenderer v-for="node in nodes" :key="node.key" :node="node" />
   </section>
 </template>
 
 <script setup lang="ts">
-import { useDrag } from '@/hooks';
-import { DRAG_RANGE } from '@/hooks/useDrag';
-import { type ElementANode } from '@/share/abstractNode';
+import { type FileConentNode } from '@/api/workData';
 import { VISUAL_CLASS_NAME } from '@/share/enums';
+import { DRAG_RANGE } from '@/share/workSpaceNodeUtils';
 import { useCommonStore } from '@/stores/commonStore';
 import { useSidebarStore } from '@/stores/sidebarStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
@@ -30,57 +29,11 @@ const commonStore = useCommonStore();
 const workspaceStore = useWorkspaceStore();
 const sidebarStore = useSidebarStore();
 
-const anodeList = ref<ElementANode[]>([]);
-
 const timer = ref();
 const isShow = ref(false);
+const nodes = ref<FileConentNode[]>([]);
 const containerRef = ref<HTMLElement>();
 const canvasRef = ref<HTMLCanvasElement>();
-
-watch(
-  () => props.showHightlight,
-  newVal => {
-    isShow.value = newVal;
-  }
-);
-
-const init = () => {
-  const { anodes } = [...workspaceStore.openedFiles][props.index];
-  anodeList.value = anodes;
-  processElementsDrag(anodeList.value);
-};
-
-onMounted(init);
-watch(() => workspaceStore.openedFiles, init, { deep: true });
-
-const processElementsDrag = useDrag((action, info) => {
-  const merge = Object.assign(commonStore.dragData ?? {}, { action, ...info });
-  commonStore.setDragData(merge);
-
-  const { x, y, el, width, height } = merge;
-
-  if (!isShow.value) {
-    isShow.value = action !== 'move';
-  }
-  if (action === 'end') {
-    commonStore._dragData.el = null;
-  }
-
-  workspaceStore.updateNode(el!.id, {
-    x,
-    y,
-    attrs: {
-      'data-x': x,
-      'data-y': y,
-      class: { active: action === 'move' },
-      style: {
-        width: `${width}px`,
-        height: `${height}px`,
-        transform: `translate(${x}px, ${y}px)`,
-      },
-    },
-  });
-});
 
 const createGrids = (w = 0, h = 0) => {
   const canvasEl = canvasRef.value!;
@@ -111,7 +64,7 @@ const createGrids = (w = 0, h = 0) => {
   }
 };
 
-const onClick = ({ target }: MouseEvent) => {
+const onContainerClick = ({ target }: MouseEvent) => {
   if (!Array.from((target as HTMLElement).classList).includes('draggable')) {
     isShow.value = false;
   } else {
@@ -119,31 +72,75 @@ const onClick = ({ target }: MouseEvent) => {
   }
 };
 
-const onScroll = () => {
+const onContainerScroll = () => {
   const { scrollWidth, scrollHeight } = containerRef.value!;
   createGrids(scrollWidth, scrollHeight);
 };
 
-nextTick(() => {
-  createGrids();
-});
+const handleNodeDragging = () => {
+  const { content } = [...workspaceStore.openedFiles][props.index];
+  nodes.value = content;
+
+  workspaceStore.onDragComponentNode(content, (action, info) => {
+    const merge = Object.assign(commonStore.dragData ?? {}, {
+      action,
+      ...info,
+    });
+    const { x, y, el, width, height } = merge;
+    const newVal: Partial<FileConentNode> = {
+      x,
+      y,
+      attributes: {
+        'data-x': x,
+        'data-y': y,
+        class: { active: action === 'move' },
+        style: {
+          width: `${width.toFixed(1)}px`,
+          height: `${height.toFixed(1)}px`,
+          transform: `translate(${x}px, ${y}px)`,
+        },
+      },
+    };
+
+    commonStore.setDragData(merge);
+    workspaceStore.updateNode(el!.id, newVal, el!.dataset.rootKey);
+
+    if (!isShow.value) isShow.value = action !== 'move';
+    if (action === 'end') {
+      isShow.value = false;
+      commonStore._dragData.el = null;
+    }
+  });
+};
+
+nextTick(createGrids);
 
 onMounted(() => {
+  handleNodeDragging();
   window.addEventListener('resize', () => createGrids());
 });
-
-watch(
-  () => sidebarStore.width,
-  () => {
-    if (timer.value) clearTimeout(timer.value);
-    timer.value = setTimeout(createGrids, 200);
-  }
-);
 
 onBeforeUnmount(() => {
   clearTimeout(timer.value);
   window.removeEventListener('resize', () => createGrids());
 });
+
+watch(
+  () => props.showHightlight,
+  newVal => {
+    isShow.value = newVal;
+  }
+);
+
+watch(() => workspaceStore.openedFiles, handleNodeDragging, { deep: true });
+
+watch(
+  () => sidebarStore.width,
+  () => {
+    timer.value && clearTimeout(timer.value);
+    timer.value = setTimeout(createGrids, 200);
+  }
+);
 </script>
 
 <style scoped>
@@ -166,6 +163,7 @@ onBeforeUnmount(() => {
     position: absolute;
     user-select: none;
     touch-action: none;
+    color: #000;
     &.active {
       opacity: 0.7;
     }
