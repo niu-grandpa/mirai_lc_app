@@ -42,6 +42,7 @@ class NodeUtils {
     const keySet = new Set(keys); // 使用 Set 提高查找效率
 
     const findAndCollectNodes = (list: T[]): boolean => {
+      if (!list) return false;
       for (const node of list) {
         if (keySet.has(node.key)) {
           foundNodes.push(node);
@@ -50,7 +51,13 @@ class NodeUtils {
             return true; // 如果所有 key 都已找到，直接返回
           }
         }
-        if (findAndCollectNodes(node.children as unknown as T[])) {
+
+        if (
+          // @ts-ignore
+          findAndCollectNodes(node.children) ||
+          // @ts-ignore
+          findAndCollectNodes(node.content)
+        ) {
           return true;
         }
       }
@@ -73,18 +80,22 @@ class NodeUtils {
     return data;
   }
 
-  updateOne(
-    list: FolderNode[],
-    target: string | WorkDataNodeType | FolderOrFileNodeType,
-    value: object
-  ) {
-    if (typeof target === 'string') {
-      this.recursiveFindAndProcess(list, target, (node, parentNodes, index) => {
-        parentNodes[index] = deepmerge(node, value);
-        return true;
-      });
-    } else {
-      deepmerge(target as object, value);
+  updateOne(target: WorkDataNodeType | FolderOrFileNodeType, value: object) {
+    if (!target) return;
+
+    for (const key in value) {
+      // @ts-ignore
+      const v = value[key];
+      if (Reflect.has(target, key)) {
+        const b = Reflect.get(target, key);
+        if (typeof b !== 'object') {
+          Reflect.set(target, key, v);
+        } else {
+          Reflect.set(target, key, deepmerge(b, v));
+        }
+      } else {
+        Reflect.set(target, key, v);
+      }
     }
   }
 
