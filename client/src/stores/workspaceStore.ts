@@ -104,6 +104,7 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
 
     queryNodeByKey<T>(rootKey: string, key: string | string[]): T[] {
+      if (!rootKey) return [];
       const root = workSpaceNodeUtils.getRootNode(this.workData, rootKey);
       return workSpaceNodeUtils.queryAllByKeys(
         [root],
@@ -143,9 +144,14 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
 
     updateNode(target: string | WorkDataNodeType, value: object, rootKey = '') {
-      if (typeof target !== 'string') rootKey = target.rootKey;
-      const root = workSpaceNodeUtils.getRootNode(this.workData, rootKey);
-      workSpaceNodeUtils.updateOne([root], target, value);
+      let node = target;
+      if (typeof node === 'object') {
+        rootKey = node.rootKey;
+      }
+      if (typeof node === 'string' && rootKey) {
+        node = this.queryNodeByKey<WorkDataNodeType>(rootKey, node)[0];
+      }
+      workSpaceNodeUtils.updateOne(node as WorkDataNodeType, value);
     },
 
     removeNode(rootKey: string, key: string) {
