@@ -5,7 +5,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'index',
-    component: () => import('@/views/user/login/Index.vue'),
+    component: () => import('@/views/home/Index.vue'),
   },
   {
     path: '/:catchAll(.*)',
@@ -38,7 +38,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: '工作区',
     },
-    component: () => import('@/views/WorkSpace/Index.vue'),
+    component: () => import('@/views/workSpace/Index.vue'),
   },
 ];
 
